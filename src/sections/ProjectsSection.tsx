@@ -4,6 +4,7 @@ import { usePortfolio } from '../context/PortfolioContext'
 import type { ProjectData } from '../context/PortfolioContext'
 import FadeIn from '../components/FadeIn'
 import LiveProjectButton from '../components/LiveProjectButton'
+import { ArrowRight } from 'lucide-react'
 
 interface ProjectCardProps {
   project: ProjectData
@@ -124,10 +125,18 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, totalCards, s
   )
 }
 
-const ProjectsSection: React.FC = () => {
+interface ProjectsSectionProps {
+  /** When true, shows only the first 2 projects as a teaser with a "View All Work" CTA */
+  preview?: boolean
+}
+
+const ProjectsSection: React.FC<ProjectsSectionProps> = ({ preview = false }) => {
   const { data } = usePortfolio()
   const sectionRef = useRef<HTMLDivElement>(null)
-  const TOTAL = data.projects.length
+
+  // In preview mode, limit to the first 2 projects
+  const visibleProjects = preview ? data.projects.slice(0, 2) : data.projects
+  const TOTAL = visibleProjects.length
 
   return (
     <section
@@ -137,6 +146,7 @@ const ProjectsSection: React.FC = () => {
         -mt-10 sm:-mt-12 md:-mt-14 z-10 relative
         px-5 sm:px-8 md:px-10 pt-20 sm:pt-24 md:pt-32 pb-32"
     >
+      {/* Section heading */}
       <FadeIn delay={0} y={40} className="mb-16 sm:mb-20 md:mb-28">
         <h2
           className="hero-heading font-black uppercase leading-none tracking-tight text-center"
@@ -144,10 +154,16 @@ const ProjectsSection: React.FC = () => {
         >
           Project
         </h2>
+        {preview && (
+          <p className="text-center text-neutral-500 text-xs uppercase tracking-widest mt-4 font-semibold">
+            Selected Works
+          </p>
+        )}
       </FadeIn>
 
+      {/* Project cards */}
       <div className="flex flex-col gap-0">
-        {data.projects.map((project, index) => (
+        {visibleProjects.map((project, index) => (
           <ProjectCard
             key={project.num + '-' + index}
             project={project}
@@ -157,6 +173,28 @@ const ProjectsSection: React.FC = () => {
           />
         ))}
       </div>
+
+      {/* "View All Work" CTA — only shown in preview mode */}
+      {preview && (
+        <FadeIn delay={0.2} y={30} className="flex justify-center mt-20 sm:mt-24 md:mt-28">
+          <button
+            onClick={() => { window.location.hash = '#/projects' }}
+            className="group relative flex items-center gap-3 px-8 sm:px-10 py-4 rounded-full
+              bg-transparent border-2 border-[#D7E2EA]/30 text-[#D7E2EA]
+              text-sm sm:text-base font-bold uppercase tracking-widest
+              hover:border-[#D7E2EA] hover:bg-[#D7E2EA]/5
+              transition-all duration-300 cursor-pointer overflow-hidden"
+          >
+            {/* Animated background shimmer on hover */}
+            <span className="absolute inset-0 w-0 bg-gradient-to-r from-purple-600/10 to-transparent group-hover:w-full transition-all duration-500 rounded-full" />
+            <span className="relative">View All Work</span>
+            <ArrowRight
+              size={17}
+              className="relative transition-transform duration-300 group-hover:translate-x-1.5"
+            />
+          </button>
+        </FadeIn>
+      )}
     </section>
   )
 }

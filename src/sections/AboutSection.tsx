@@ -3,6 +3,7 @@ import { usePortfolio } from '../context/PortfolioContext'
 import FadeIn from '../components/FadeIn'
 import AnimatedText from '../components/AnimatedText'
 import ContactButton from '../components/ContactButton'
+import { ArrowRight } from 'lucide-react'
 
 const AboutSection: React.FC = () => {
   const { data } = usePortfolio()
@@ -95,14 +96,28 @@ const AboutSection: React.FC = () => {
           </h2>
         </FadeIn>
 
-        <div className="flex flex-col items-center gap-16 sm:gap-20 md:gap-24">
+        <div className="flex flex-col items-center gap-12 sm:gap-16 md:gap-20">
           <AnimatedText
-            key={data.about.description} // Key ensures text animates correctly when edited
+            key={data.about.description}
             text={data.about.description}
             className="text-[#D7E2EA] font-medium text-center leading-relaxed max-w-[560px]"
             style={{ fontSize: 'clamp(1rem, 2vw, 1.35rem)' }}
           />
-          <ContactButton />
+
+          {/* CTA row — Contact + "See Full Story" side by side */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+            <ContactButton />
+            <button
+              onClick={() => { window.location.hash = '#/about' }}
+              className="group flex items-center gap-2 px-7 py-3 rounded-full border border-white/20 text-[#D7E2EA] text-sm sm:text-base font-semibold uppercase tracking-widest hover:bg-white/5 hover:border-white/50 transition-all duration-300 cursor-pointer bg-transparent"
+            >
+              See Full Story
+              <ArrowRight
+                size={16}
+                className="transition-transform duration-300 group-hover:translate-x-1"
+              />
+            </button>
+          </div>
         </div>
       </div>
     </section>

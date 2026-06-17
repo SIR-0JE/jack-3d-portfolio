@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { PortfolioProvider } from './context/PortfolioContext'
 import HeroSection from './sections/HeroSection'
 import MarqueeSection from './sections/MarqueeSection'
+import AboutSection from './sections/AboutSection'
+import ProjectsSection from './sections/ProjectsSection'
 import ServicesSection from './sections/ServicesSection'
 import Navbar from './components/Navbar'
 import AboutPage from './components/AboutPage'
@@ -16,6 +18,8 @@ function MainContent() {
   useEffect(() => {
     const handleHashChange = () => {
       setCurrentRoute(window.location.hash || '#/')
+      // Scroll to top on route change
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
     window.addEventListener('hashchange', handleHashChange)
@@ -47,6 +51,10 @@ function MainContent() {
           <>
             <HeroSection />
             <MarqueeSection />
+            {/* About Preview — teases the full About page */}
+            <AboutSection />
+            {/* Projects Preview — shows first 2 cards, links to full page */}
+            <ProjectsSection preview />
             <ServicesSection />
           </>
         )}
