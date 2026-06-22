@@ -3,7 +3,6 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { usePortfolio } from '../context/PortfolioContext'
 import type { ProjectData } from '../context/PortfolioContext'
 import FadeIn from '../components/FadeIn'
-import LiveProjectButton from '../components/LiveProjectButton'
 import { ArrowRight } from 'lucide-react'
 
 interface ProjectCardProps {
@@ -21,7 +20,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, totalCards, s
     offset: ['start start', 'end end'],
   })
 
-  // Safe check if single card or divide by zero
+  // Stacking scale calculation
   const progressRatio = totalCards > 1 ? index / (totalCards - 1) : 0
   const targetScale = 1 - (totalCards - 1 - index) * 0.03
 
@@ -45,91 +44,106 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, totalCards, s
           transformOrigin: 'top center',
           borderRadius,
         }}
-        className="w-full border-2 border-[#D7E2EA] bg-[#0C0C0C] p-4 sm:p-6 md:p-8 overflow-hidden"
+        className="w-full border-2 border-[#D7E2EA] bg-[#0C0C0C] p-5 sm:p-7 md:p-9 overflow-hidden flex flex-col gap-6"
       >
         {/* Top row */}
-        <div className="flex items-center justify-between mb-4 sm:mb-6 gap-4 flex-wrap">
+        <div className="flex items-center justify-between gap-4 flex-wrap border-b border-white/5 pb-4">
           <div 
             className="flex items-baseline gap-4 sm:gap-6 cursor-pointer group"
             onClick={() => { window.location.hash = `#/project/${project.num}` }}
           >
             <span
               className="hero-heading font-black leading-none group-hover:opacity-80 transition-opacity"
-              style={{ fontSize: 'clamp(3rem, 10vw, 140px)' }}
+              style={{ fontSize: 'clamp(2.5rem, 8vw, 100px)' }}
             >
               {project.num}
             </span>
             <div className="flex flex-col">
-              <span
-                className="text-[#D7E2EA] font-light uppercase tracking-widest opacity-60"
-                style={{ fontSize: 'clamp(0.7rem, 1.2vw, 1rem)' }}
-              >
+              <span className="text-purple-400 font-bold uppercase tracking-widest text-[10px] sm:text-xs">
                 {project.category}
               </span>
-              <span
-                className="text-[#D7E2EA] font-medium uppercase tracking-wide group-hover:text-purple-400 transition-colors"
-                style={{ fontSize: 'clamp(1rem, 2.2vw, 2.1rem)' }}
+              <h2
+                className="text-white font-black uppercase tracking-tight group-hover:text-purple-400 transition-colors"
+                style={{ fontSize: 'clamp(1.1rem, 2.5vw, 2.2rem)' }}
               >
                 {project.name}
-              </span>
+              </h2>
             </div>
           </div>
           <button
             onClick={() => { window.location.hash = `#/project/${project.num}` }}
-            className="rounded-full border-2 border-[#D7E2EA] text-[#D7E2EA] font-medium uppercase tracking-widest px-8 py-3 sm:px-10 sm:py-3.5 text-sm sm:text-base transition-colors duration-200 hover:bg-[#D7E2EA]/10 cursor-pointer bg-transparent"
+            className="rounded-full border-2 border-[#D7E2EA] text-[#D7E2EA] font-medium uppercase tracking-widest px-6 py-2.5 sm:px-8 sm:py-3 text-xs sm:text-sm transition-colors duration-200 hover:bg-[#D7E2EA]/10 cursor-pointer bg-transparent"
           >
             View Project
           </button>
         </div>
 
-        {/* Bottom row - image grid */}
+        {/* Dynamic Project Hook Description */}
+        <div className="text-neutral-300 text-sm sm:text-base leading-relaxed font-light font-sans max-w-3xl">
+          {project.template_type === 'casestudy' && project.problem_statement ? (
+            <p><strong>Problem Solved: </strong>{project.problem_statement}</p>
+          ) : (
+            <p>{project.description}</p>
+          )}
+        </div>
+
+        {/* Visual Showcase with Glassmorphic Metric Overlay */}
         <div 
-          className="flex gap-3 sm:gap-4 cursor-pointer"
+          className="relative flex gap-3 sm:gap-4 cursor-pointer overflow-hidden rounded-[30px]"
           onClick={() => { window.location.hash = `#/project/${project.num}` }}
         >
-          {/* Left column - 40% */}
+          {/* Left stacked images - 40% */}
           <div className="flex flex-col gap-3 sm:gap-4" style={{ width: '40%' }}>
             {project.col1img1 && (
               <img
                 src={project.col1img1}
-                alt={`${project.name} preview 1`}
+                alt={`${project.name} mockup 1`}
                 loading="lazy"
                 className="w-full object-cover"
                 style={{
-                  height: 'clamp(130px, 16vw, 230px)',
-                  borderRadius,
+                  height: 'clamp(120px, 15vw, 200px)',
+                  borderRadius: 'clamp(15px, 2vw, 25px)',
                 }}
               />
             )}
             {project.col1img2 && (
               <img
                 src={project.col1img2}
-                alt={`${project.name} preview 2`}
+                alt={`${project.name} mockup 2`}
                 loading="lazy"
                 className="w-full object-cover"
                 style={{
-                  height: 'clamp(160px, 22vw, 340px)',
-                  borderRadius,
+                  height: 'clamp(140px, 20vw, 280px)',
+                  borderRadius: 'clamp(15px, 2vw, 25px)',
                 }}
               />
             )}
           </div>
 
-          {/* Right column - 60% */}
-          <div style={{ width: '60%' }}>
+          {/* Right main image - 60% */}
+          <div style={{ width: '60%' }} className="relative">
             {project.col2img && (
               <img
                 src={project.col2img}
-                alt={`${project.name} main`}
+                alt={`${project.name} visual preview`}
                 loading="lazy"
-                className="w-full object-cover"
+                className="w-full h-full object-cover"
                 style={{
-                  height: 'clamp(300px, 40vw, 590px)',
-                  borderRadius,
+                  minHeight: 'clamp(270px, 35vw, 490px)',
+                  borderRadius: 'clamp(15px, 2vw, 25px)',
                 }}
               />
             )}
           </div>
+
+          {/* Glassmorphic Metrics Badge Overlay - overlaps bottom-left of images container */}
+          {project.template_type === 'casestudy' && project.success_metrics && project.success_metrics.length > 0 && (
+            <div className="absolute bottom-6 left-6 z-20 bg-white/10 backdrop-blur-md border border-white/10 px-4 py-2.5 rounded-2xl shadow-xl max-w-[80%] pointer-events-none select-none">
+              <span className="text-white text-xs sm:text-sm font-bold tracking-wide flex items-center gap-1.5 font-sans">
+                {project.success_metrics[0]}
+              </span>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
@@ -163,11 +177,11 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ preview = false }) =>
           className="hero-heading font-black uppercase leading-none tracking-tight text-center"
           style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
         >
-          Project
+          Work
         </h2>
         {preview && (
           <p className="text-center text-neutral-500 text-xs uppercase tracking-widest mt-4 font-semibold">
-            Selected Works
+            Featured Outcomes
           </p>
         )}
       </FadeIn>
@@ -196,7 +210,6 @@ const ProjectsSection: React.FC<ProjectsSectionProps> = ({ preview = false }) =>
               hover:border-[#D7E2EA] hover:bg-[#D7E2EA]/5
               transition-all duration-300 cursor-pointer overflow-hidden"
           >
-            {/* Animated background shimmer on hover */}
             <span className="absolute inset-0 w-0 bg-gradient-to-r from-purple-600/10 to-transparent group-hover:w-full transition-all duration-500 rounded-full" />
             <span className="relative">View All Work</span>
             <ArrowRight

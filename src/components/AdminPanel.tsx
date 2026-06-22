@@ -1,21 +1,21 @@
 import React, { useState } from 'react'
 import { usePortfolio } from '../context/PortfolioContext'
-import type { ProjectData } from '../context/PortfolioContext'
+import type { ProjectData, CaseStudyProject, VisualSnackProject } from '../context/PortfolioContext'
 import {
   Lock,
   LogOut,
-  ExternalLink,
   Plus,
   Trash2,
   Upload,
   Layers,
-  Info,
   Sliders,
   Briefcase,
-  FileImage,
-  RefreshCw,
   PlusCircle,
   Eye,
+  Settings,
+  Grid,
+  Info,
+  CheckCircle
 } from 'lucide-react'
 
 // Image uploader / input helper
@@ -65,18 +65,18 @@ const ImageInput: React.FC<ImageInputProps> = ({ label, value, onChange }) => {
     }
   }
 
-  const isBase64 = value.startsWith('data:image/')
+  const isBase64 = value ? value.startsWith('data:image/') : false
 
   return (
     <div className="flex flex-col gap-2 bg-[#141414] p-4 rounded-xl border border-neutral-800">
-      <label className="text-sm font-semibold tracking-wider uppercase text-neutral-400">{label}</label>
+      <label className="text-xs font-semibold tracking-wider uppercase text-neutral-400">{label}</label>
 
       {/* Image Preview */}
       {value && (
         <div className="relative w-full h-32 rounded-lg overflow-hidden border border-neutral-700 bg-black group mb-2">
           <img src={value} alt={label} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <span className="text-xs text-neutral-300 font-mono tracking-tighter truncate max-w-[90%]">
+            <span className="text-[10px] text-neutral-300 font-mono tracking-tighter truncate max-w-[90%]">
               {isBase64 ? 'Base64 Local Image' : value}
             </span>
           </div>
@@ -90,7 +90,7 @@ const ImageInput: React.FC<ImageInputProps> = ({ label, value, onChange }) => {
           value={isBase64 ? '' : value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={isBase64 ? '[Local base64 image uploaded - paste URL to overwrite]' : 'Paste Image URL...'}
-          className="bg-[#0C0C0C] border border-neutral-800 rounded-lg px-3 py-2 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
+          className="bg-[#0C0C0C] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
         />
 
         <div
@@ -101,8 +101,8 @@ const ImageInput: React.FC<ImageInputProps> = ({ label, value, onChange }) => {
           className={`relative border-2 border-dashed rounded-lg p-3 text-center transition-colors cursor-pointer flex flex-col items-center justify-center gap-1
             ${dragActive ? 'border-purple-500 bg-purple-500/10' : 'border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800/20'}`}
         >
-          <Upload size={16} className="text-neutral-500" />
-          <span className="text-xs text-neutral-400">Drag & drop or click to upload local file</span>
+          <Upload size={14} className="text-neutral-500" />
+          <span className="text-[10px] text-neutral-400">Drag & drop or click to upload local file</span>
           <input
             type="file"
             accept="image/*"
@@ -138,23 +138,40 @@ const AdminPanel: React.FC = () => {
 
   // Editing tabs
   const [activeTab, setActiveTab] = useState<'hero' | 'about' | 'services' | 'projects' | 'marquee'>('hero')
+  
+  // Custom case study editor tab navigation
+  const [editingProjectIndex, setEditingProjectIndex] = useState<number | null>(null)
+  const [caseStudyTab, setCaseStudyTab] = useState<'context' | 'research' | 'process' | 'features' | 'impact'>('context')
+
+  // Auto save visual prompt state
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Trigger brief auto-save indicator
+  const triggerAutoSaveIndicator = () => {
+    setIsSaving(true)
+    setTimeout(() => {
+      setIsSaving(false)
+    }, 800)
+  }
 
   // New Project Form state
   const [newProj, setNewProj] = useState<ProjectData>({
     num: '',
-    category: 'Client',
+    category: 'Civic Tech',
     name: '',
     col1img1: '',
     col1img2: '',
     col2img: '',
     description: '',
-    role: '',
+    role: 'UI/UX Designer',
     tools: [],
     liveUrl: '',
-    challenge: '',
-    process: '',
-    solution: '',
-    extraImages: [],
+    template_type: 'casestudy',
+    problem_statement: '',
+    research_insights: [],
+    process_gallery: [],
+    solution_features: [],
+    success_metrics: [],
   })
 
   // New Timeline Item State
@@ -196,22 +213,25 @@ const AdminPanel: React.FC = () => {
       return
     }
     addProject(newProj)
+    triggerAutoSaveIndicator()
     // reset form
     setNewProj({
       num: '',
-      category: 'Client',
+      category: 'Civic Tech',
       name: '',
       col1img1: '',
       col1img2: '',
       col2img: '',
       description: '',
-      role: '',
+      role: 'UI/UX Designer',
       tools: [],
       liveUrl: '',
-      challenge: '',
-      process: '',
-      solution: '',
-      extraImages: [],
+      template_type: 'casestudy',
+      problem_statement: '',
+      research_insights: [],
+      process_gallery: [],
+      solution_features: [],
+      success_metrics: [],
     })
   }
 
@@ -225,6 +245,7 @@ const AdminPanel: React.FC = () => {
     updateAbout({
       timeline: [...(data.about.timeline || []), newTimeline],
     })
+    triggerAutoSaveIndicator()
     setNewTimeline({
       year: '',
       role: '',
@@ -237,884 +258,993 @@ const AdminPanel: React.FC = () => {
     updateAbout({
       timeline: data.about.timeline.filter((_, i) => i !== idx),
     })
+    triggerAutoSaveIndicator()
   }
 
-  // Handle marquee operations
   const addMarqueeItem = () => {
-    if (newMarqueeUrl.trim()) {
-      updateMarquee([...data.marquee, newMarqueeUrl.trim()])
+    if (newMarqueeUrl) {
+      updateMarquee([...data.marquee, newMarqueeUrl])
       setNewMarqueeUrl('')
+      triggerAutoSaveIndicator()
     }
   }
 
   const deleteMarqueeItem = (idx: number) => {
     updateMarquee(data.marquee.filter((_, i) => i !== idx))
+    triggerAutoSaveIndicator()
   }
 
-  // Login view
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0C0C0C] flex flex-col items-center justify-center font-sans px-4">
-        <div className="w-full max-w-md bg-[#111] border border-neutral-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
-          {/* Glass background details */}
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-purple-600/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-600/20 rounded-full blur-3xl" />
-
-          <div className="flex flex-col items-center gap-2 mb-8 relative">
-            <div className="w-12 h-12 bg-neutral-900 border border-neutral-800 rounded-xl flex items-center justify-center">
-              <Lock size={20} className="text-neutral-300" />
+      <div className="min-h-screen bg-[#0C0C0C] text-[#D7E2EA] flex items-center justify-center p-6 font-sans">
+        <form onSubmit={handleLogin} className="w-full max-w-md bg-[#111] border border-neutral-800 p-8 rounded-[40px] flex flex-col gap-6 shadow-2xl">
+          <div className="flex flex-col gap-2 items-center text-center">
+            <div className="w-12 h-12 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+              <Lock size={20} />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white uppercase mt-2">Portfolio Admin</h1>
-            <p className="text-xs text-neutral-500 uppercase tracking-widest">Sign in to edit portfolio details</p>
+            <h1 className="text-xl font-bold uppercase tracking-widest text-white mt-2">Design Console</h1>
+            <p className="text-xs text-neutral-500">Authentication required to customize portfolio tokens.</p>
           </div>
 
-          <form onSubmit={handleLogin} className="flex flex-col gap-4 relative">
-            {loginError && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs px-4 py-3 rounded-lg text-center font-medium">
-                {loginError}
-              </div>
-            )}
-
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Username</label>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-neutral-400 font-bold">Username</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. admin"
-                className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
+                placeholder="admin"
+                className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500"
                 required
               />
             </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Password</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] uppercase tracking-wider text-neutral-400 font-bold">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••"
-                className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
+                className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500"
                 required
               />
             </div>
+          </div>
 
-            <button
-              type="submit"
-              className="mt-4 bg-white hover:bg-neutral-200 text-[#0C0C0C] font-semibold uppercase tracking-widest text-xs py-4 rounded-xl cursor-pointer transition-all duration-200 hover:scale-[1.01]"
-            >
-              Authenticate
-            </button>
-          </form>
+          {loginError && (
+            <span className="text-red-400 text-xs text-center font-semibold bg-red-950/20 border border-red-900/30 py-2.5 rounded-xl">
+              {loginError}
+            </span>
+          )}
 
           <button
-            onClick={exitAdminMode}
-            className="w-full mt-4 flex items-center justify-center gap-2 border border-neutral-800 hover:bg-neutral-900/50 text-neutral-400 text-xs uppercase tracking-widest py-3 rounded-xl cursor-pointer transition-colors"
+            type="submit"
+            className="w-full py-3.5 bg-purple-600 border border-purple-500 hover:bg-purple-700 text-white text-xs font-bold uppercase tracking-widest rounded-full transition-all cursor-pointer"
           >
-            <Eye size={12} />
-            View Live Portfolio
+            Access Dashboard
           </button>
-        </div>
+
+          <button
+            type="button"
+            onClick={exitAdminMode}
+            className="text-xs text-neutral-500 hover:text-neutral-300 text-center transition-colors cursor-pointer"
+          >
+            Go Back to Portfolio
+          </button>
+        </form>
       </div>
     )
   }
 
-  // Dashboard View
   return (
-    <div className="min-h-screen bg-[#0C0C0C] font-sans flex text-neutral-200">
-      {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-neutral-800 flex flex-col justify-between flex-shrink-0 bg-[#0E0E0E]">
-        <div>
-          {/* Header */}
-          <div className="p-6 border-b border-neutral-800 flex items-center justify-between">
-            <div>
-              <h1 className="font-bold text-white text-lg tracking-tight uppercase">Admin Panel</h1>
-              <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-semibold">Active Session</p>
-            </div>
-            <button
-              onClick={exitAdminMode}
-              title="View Live Site"
-              className="p-2 hover:bg-neutral-800 rounded-lg text-neutral-400 hover:text-white transition-colors cursor-pointer"
-            >
-              <ExternalLink size={16} />
-            </button>
+    <div className="min-h-screen bg-[#0C0C0C] text-[#D7E2EA] flex flex-col font-sans">
+      
+      {/* Top Header */}
+      <header className="fixed top-0 left-0 w-full bg-[#111] border-b border-neutral-800 px-6 py-4 flex justify-between items-center z-40">
+        <div className="flex items-center gap-3">
+          <span className="text-base sm:text-lg font-black uppercase tracking-tight text-white">Niyi.Dashboard</span>
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-400 font-mono">
+            {isSaving ? (
+              <span className="flex items-center gap-1.5 text-purple-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                Auto-saving...
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-green-400">
+                <CheckCircle size={10} />
+                Synced to LocalStorage
+              </span>
+            )}
           </div>
-
-          {/* Navigation Links */}
-          <nav className="p-4 flex flex-col gap-1">
-            <button
-              onClick={() => setActiveTab('hero')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors uppercase tracking-wider cursor-pointer text-left
-                ${activeTab === 'hero' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
-            >
-              <Sliders size={16} />
-              Hero Section
-            </button>
-
-            <button
-              onClick={() => setActiveTab('about')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors uppercase tracking-wider cursor-pointer text-left
-                ${activeTab === 'about' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
-            >
-              <Info size={16} />
-              About Section
-            </button>
-
-            <button
-              onClick={() => setActiveTab('services')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors uppercase tracking-wider cursor-pointer text-left
-                ${activeTab === 'services' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
-            >
-              <Layers size={16} />
-              Services list
-            </button>
-
-            <button
-              onClick={() => setActiveTab('projects')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors uppercase tracking-wider cursor-pointer text-left
-                ${activeTab === 'projects' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
-            >
-              <Briefcase size={16} />
-              Projects
-            </button>
-
-            <button
-              onClick={() => setActiveTab('marquee')}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors uppercase tracking-wider cursor-pointer text-left
-                ${activeTab === 'marquee' ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
-            >
-              <FileImage size={16} />
-              Marquee Images
-            </button>
-          </nav>
         </div>
 
-        {/* Footer actions */}
-        <div className="p-4 border-t border-neutral-800 flex flex-col gap-2">
+        <div className="flex gap-3">
           <button
-            onClick={() => {
-              if (window.confirm('Restore default design template? All local changes will be lost.')) {
-                resetToDefault()
-              }
-            }}
-            className="flex items-center justify-center gap-2 w-full px-4 py-2 border border-neutral-800 hover:bg-neutral-900 text-xs font-semibold uppercase tracking-wider text-neutral-400 hover:text-white rounded-xl cursor-pointer transition-colors"
+            onClick={exitAdminMode}
+            className="flex items-center gap-1.5 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 rounded-full text-xs font-semibold uppercase tracking-wider text-neutral-300 cursor-pointer transition-colors"
           >
-            <RefreshCw size={12} />
-            Reset Default
+            <Eye size={12} />
+            View Site
           </button>
-
           <button
             onClick={handleLogout}
-            className="flex items-center justify-center gap-2 w-full px-4 py-2 border border-red-900/30 hover:bg-red-950/20 text-xs font-semibold uppercase tracking-wider text-red-400 hover:text-red-300 rounded-xl cursor-pointer transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 rounded-full text-xs font-semibold uppercase tracking-wider text-red-400 cursor-pointer transition-colors"
           >
             <LogOut size={12} />
-            Log Out
+            Exit
           </button>
         </div>
-      </aside>
+      </header>
 
-      {/* Main Workspace Area */}
-      <main className="flex-1 p-8 overflow-y-auto max-w-4xl">
-        {/* HERO SECTION EDITING */}
-        {activeTab === 'hero' && (
-          <div className="flex flex-col gap-6">
-            <div>
-              <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-1">Hero Section Editor</h2>
-              <p className="text-xs text-neutral-500">Modify the text, visual, and layout details for the main hero landing view.</p>
-            </div>
+      {/* Main layout wrapper */}
+      <div className="flex-1 flex pt-[73px]">
+        {/* Left Sidebar navigation */}
+        <aside className="w-64 bg-[#0E0E0E] border-r border-neutral-800 p-6 flex flex-col gap-2 h-[calc(100vh-73px)] fixed left-0 top-[73px] z-30">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 px-3 mb-2">Sections</span>
+          
+          {(['hero', 'about', 'services', 'projects', 'marquee'] as const).map((tab) => {
+            const isActive = activeTab === tab
+            return (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab)
+                  setEditingProjectIndex(null)
+                }}
+                className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border-none text-left
+                  ${isActive ? 'bg-purple-600 text-white font-black shadow-[0_0_15px_rgba(168,85,247,0.15)]' : 'bg-transparent text-neutral-400 hover:text-white hover:bg-neutral-900'}`}
+              >
+                {tab === 'hero' && <Grid size={14} />}
+                {tab === 'about' && <Info size={14} />}
+                {tab === 'services' && <Sliders size={14} />}
+                {tab === 'projects' && <Briefcase size={14} />}
+                {tab === 'marquee' && <Settings size={14} />}
+                {tab}
+              </button>
+            )
+          })}
 
-            <div className="flex flex-col gap-4 bg-[#111] p-6 rounded-2xl border border-neutral-800">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Headline Text</label>
-                <input
-                  type="text"
-                  value={data.hero.title}
-                  onChange={(e) => updateHero({ title: e.target.value })}
-                  placeholder="Hi, i'm jack"
-                  className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Subtext Description</label>
-                <textarea
-                  value={data.hero.subtitle}
-                  onChange={(e) => updateHero({ subtitle: e.target.value })}
-                  placeholder="a 3d creator driven by crafting striking and unforgettable projects"
-                  rows={3}
-                  className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans resize-none"
-                />
-              </div>
-
-              <ImageInput
-                label="Hero Portrait Image"
-                value={data.hero.portrait}
-                onChange={(val) => updateHero({ portrait: val })}
-              />
-
-              <ImageInput
-                label="Hero Portrait Hover (Smiling)"
-                value={data.hero.portraitHover || ''}
-                onChange={(val) => updateHero({ portraitHover: val })}
-              />
-            </div>
+          <div className="mt-auto border-t border-neutral-900 pt-4 px-3 flex flex-col gap-2">
+            <button
+              onClick={() => {
+                if (window.confirm('Reset all details back to Niyi UI default template values?')) {
+                  resetToDefault()
+                  triggerAutoSaveIndicator()
+                }
+              }}
+              className="text-[10px] text-neutral-500 hover:text-red-400 transition-colors uppercase tracking-widest font-bold bg-transparent border-none text-left cursor-pointer"
+            >
+              Reset to Defaults
+            </button>
           </div>
-        )}
+        </aside>
 
-        {/* ABOUT SECTION EDITING */}
-        {activeTab === 'about' && (
-          <div className="flex flex-col gap-6">
-            <div>
-              <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-1">About Section Editor</h2>
-              <p className="text-xs text-neutral-500">Edit content and the absolute positioned corner decorative 3D assets.</p>
-            </div>
-
-            <div className="flex flex-col gap-4 bg-[#111] p-6 rounded-2xl border border-neutral-800">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Section Title</label>
-                <input
-                  type="text"
-                  value={data.about.title}
-                  onChange={(e) => updateAbout({ title: e.target.value })}
-                  placeholder="About me"
-                  className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                />
+        {/* Right content view area */}
+        <main className="flex-1 min-h-[calc(100vh-73px)] pl-64 p-8 bg-[#0C0C0C]">
+          
+          {/* HERO SECTION EDITING */}
+          {activeTab === 'hero' && (
+            <div className="flex flex-col gap-6 max-w-3xl">
+              <div>
+                <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-1">Hero Specs</h2>
+                <p className="text-xs text-neutral-500">Edit the hook message, subtitles, and magnetic face-swap portraits.</p>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Animated Paragraph (Character Reveal)</label>
-                <textarea
-                  value={data.about.description}
-                  onChange={(e) => updateAbout({ description: e.target.value })}
-                  placeholder="With more than five years of experience..."
-                  rows={5}
-                  className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans resize-none"
-                />
+              <div className="bg-[#111] p-6 rounded-2xl border border-neutral-800 flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Headline</label>
+                  <textarea
+                    value={data.hero.title}
+                    onChange={(e) => {
+                      updateHero({ title: e.target.value })
+                      triggerAutoSaveIndicator()
+                    }}
+                    rows={2}
+                    className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 resize-none font-sans"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Subtitle Spec</label>
+                  <input
+                    type="text"
+                    value={data.hero.subtitle}
+                    onChange={(e) => {
+                      updateHero({ subtitle: e.target.value })
+                      triggerAutoSaveIndicator()
+                    }}
+                    className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <ImageInput
+                    label="Neutral Face Portrait"
+                    value={data.hero.portrait}
+                    onChange={(val) => {
+                      updateHero({ portrait: val })
+                      triggerAutoSaveIndicator()
+                    }}
+                  />
+                  <ImageInput
+                    label="Hover Smiling Face Portrait"
+                    value={data.hero.portraitHover}
+                    onChange={(val) => {
+                      updateHero({ portraitHover: val })
+                      triggerAutoSaveIndicator()
+                    }}
+                  />
+                </div>
               </div>
             </div>
+          )}
 
-            <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 mt-4 mb-2">Corner Decor Images</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ImageInput
-                label="Top-Left (Moon Icon)"
-                value={data.about.decorMoon}
-                onChange={(val) => updateAbout({ decorMoon: val })}
-              />
-              <ImageInput
-                label="Top-Right (Lego Icon)"
-                value={data.about.decorLego}
-                onChange={(val) => updateAbout({ decorLego: val })}
-              />
-              <ImageInput
-                label="Bottom-Left (3D object)"
-                value={data.about.decorP59}
-                onChange={(val) => updateAbout({ decorP59: val })}
-              />
-              <ImageInput
-                label="Bottom-Right (3D Group)"
-                value={data.about.decorGroup}
-                onChange={(val) => updateAbout({ decorGroup: val })}
-              />
-            </div>
-
-            {/* Skills List Editor */}
-            <div className="flex flex-col gap-4 bg-[#111] p-6 rounded-2xl border border-neutral-800 mt-4">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 border-b border-neutral-800 pb-3">
-                Skills & Capabilities
-              </h3>
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-                  Skills (Comma separated list)
-                </label>
-                <input
-                  type="text"
-                  value={data.about.skills ? data.about.skills.join(', ') : ''}
-                  onChange={(e) =>
-                    updateAbout({
-                      skills: e.target.value
-                        .split(',')
-                        .map((s) => s.trim())
-                        .filter(Boolean),
-                    })
-                  }
-                  placeholder="e.g. Cinema 4D, Spline, Figma, Blender"
-                  className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                />
+          {/* ABOUT SECTION EDITING */}
+          {activeTab === 'about' && (
+            <div className="flex flex-col gap-6 max-w-4xl">
+              <div>
+                <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-1">About & Journey</h2>
+                <p className="text-xs text-neutral-500">Edit Niyi's bio narrative, decorative details, and timeline journeyman records.</p>
               </div>
-            </div>
 
-            {/* Experience Timeline Editor */}
-            <div className="flex flex-col gap-4 bg-[#111] p-6 rounded-2xl border border-neutral-800 mt-4">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 border-b border-neutral-800 pb-3">
-                Experience Timeline
-              </h3>
+              <div className="bg-[#111] p-6 rounded-2xl border border-neutral-800 flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Bio Description</label>
+                  <textarea
+                    value={data.about.description}
+                    onChange={(e) => {
+                      updateAbout({ description: e.target.value })
+                      triggerAutoSaveIndicator()
+                    }}
+                    rows={4}
+                    className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 resize-none font-sans"
+                  />
+                </div>
 
-              {/* List current items */}
-              <div className="flex flex-col gap-4">
-                {data.about.timeline && data.about.timeline.map((item, index) => (
-                  <div key={index} className="p-4 bg-[#0C0C0C] border border-neutral-800 rounded-xl flex flex-col gap-3">
-                    <div className="flex items-center justify-between border-b border-neutral-850 pb-2">
-                      <span className="text-xs font-bold text-neutral-500 font-mono">Milestone #{index + 1}</span>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Capabilities (Comma separated)</label>
+                  <input
+                    type="text"
+                    value={data.about.skills.join(', ')}
+                    onChange={(e) => {
+                      updateAbout({
+                        skills: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
+                      })
+                      triggerAutoSaveIndicator()
+                    }}
+                    className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+              </div>
+
+              {/* Journey timeline */}
+              <div className="bg-[#111] p-6 rounded-2xl border border-neutral-800 flex flex-col gap-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 border-b border-neutral-800 pb-3">Journey timeline</h3>
+                <div className="flex flex-col gap-4">
+                  {data.about.timeline.map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-center bg-[#0C0C0C] p-4 rounded-xl border border-neutral-800">
+                      <div>
+                        <span className="text-xs text-purple-400 font-bold">{item.year}</span>
+                        <h4 className="text-sm font-bold text-white uppercase">{item.role} at {item.company}</h4>
+                      </div>
                       <button
-                        type="button"
-                        onClick={() => handleDeleteTimelineItem(index)}
-                        className="flex items-center gap-1.5 px-2.5 py-1 bg-red-950/20 hover:bg-red-950/40 text-red-400 text-xs font-semibold uppercase tracking-wider rounded-lg border border-red-900/30 cursor-pointer transition-colors"
+                        onClick={() => handleDeleteTimelineItem(idx)}
+                        className="text-red-500 hover:text-red-400 text-xs bg-transparent border-none cursor-pointer uppercase tracking-wider font-bold"
                       >
-                        <Trash2 size={10} />
-                        Delete
+                        Remove
                       </button>
                     </div>
+                  ))}
+                </div>
 
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold uppercase text-neutral-500">Year</label>
+                {/* Form to add timeline */}
+                <form onSubmit={handleAddTimelineSubmit} className="flex flex-col gap-4 border-t border-neutral-800 pt-4 mt-2">
+                  <div className="grid grid-cols-3 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Year (e.g. 2024 - Present)"
+                      value={newTimeline.year}
+                      onChange={(e) => setNewTimeline({ ...newTimeline, year: e.target.value })}
+                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Role (e.g. Lead Designer)"
+                      value={newTimeline.role}
+                      onChange={(e) => setNewTimeline({ ...newTimeline, role: e.target.value })}
+                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Company"
+                      value={newTimeline.company}
+                      onChange={(e) => setNewTimeline({ ...newTimeline, company: e.target.value })}
+                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200"
+                    />
+                  </div>
+                  <textarea
+                    placeholder="Short description of achievements..."
+                    value={newTimeline.description}
+                    onChange={(e) => setNewTimeline({ ...newTimeline, description: e.target.value })}
+                    rows={2}
+                    className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200 resize-none font-sans"
+                  />
+                  <button type="submit" className="self-end py-2 px-6 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold uppercase tracking-wider rounded-lg">
+                    Add Milestone
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* PROJECTS SECTION EDITING */}
+          {activeTab === 'projects' && (
+            <div className="flex flex-col gap-6 max-w-5xl">
+              <div>
+                <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-1">Projects & Spec Templates</h2>
+                <p className="text-xs text-neutral-500">Configure case studies or visual designs here. Autosaver tracks changes live.</p>
+              </div>
+
+              {editingProjectIndex === null ? (
+                // Project Listing in Dashboard
+                <div className="flex flex-col gap-4">
+                  {data.projects.map((proj, idx) => (
+                    <div key={idx} className="bg-[#111] p-5 rounded-2xl border border-neutral-800 flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <span className="text-base font-black text-neutral-500">{proj.num}</span>
+                        <div>
+                          <h3 className="text-base font-bold text-white uppercase tracking-tight">{proj.name}</h3>
+                          <span className="px-2.5 py-0.5 rounded-full bg-purple-600/10 border border-purple-500/20 text-[9px] uppercase tracking-widest text-purple-400 font-bold font-mono">
+                            {proj.template_type === 'casestudy' ? 'Deep Case Study' : 'Visual Snack'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setEditingProjectIndex(idx)}
+                          className="px-4 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-xs font-bold uppercase hover:bg-neutral-800 text-white cursor-pointer transition-colors"
+                        >
+                          Edit Content & Tabs
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm('Delete this project?')) deleteProject(idx)
+                          }}
+                          className="p-2 rounded-lg bg-red-950/20 border border-red-900/30 hover:bg-red-950/40 text-red-400 cursor-pointer"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Add project block */}
+                  <div className="bg-[#111] p-6 rounded-[30px] border border-neutral-800 flex flex-col gap-4 mt-4">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 border-b border-neutral-800 pb-3 flex items-center gap-2">
+                      <PlusCircle size={16} />
+                      Create New Project
+                    </h3>
+                    <form onSubmit={handleAddProjectSubmit} className="flex flex-col gap-4">
+                      {/* Master Switch */}
+                      <div className="grid grid-cols-2 gap-4 bg-[#0C0C0C] p-2.5 rounded-2xl border border-neutral-800">
+                        <button
+                          type="button"
+                          onClick={() => setNewProj({ ...newProj, template_type: 'casestudy' })}
+                          className={`py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border-none
+                            ${newProj.template_type === 'casestudy' ? 'bg-purple-600 text-white' : 'bg-transparent text-neutral-400'}`}
+                        >
+                          Deep Case Study
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNewProj({ ...newProj, template_type: 'visual' })}
+                          className={`py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border-none
+                            ${newProj.template_type === 'visual' ? 'bg-purple-600 text-white' : 'bg-transparent text-neutral-400'}`}
+                        >
+                          Visual Snack
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <input
                           type="text"
-                          value={item.year}
-                          onChange={(e) => {
-                            const updated = [...data.about.timeline]
-                            updated[index] = { ...updated[index], year: e.target.value }
-                            updateAbout({ timeline: updated })
-                          }}
-                          className="bg-[#111] border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-200 focus:outline-none focus:border-purple-500"
+                          placeholder="Order Index (e.g. 03)"
+                          value={newProj.num}
+                          onChange={(e) => setNewProj({ ...newProj, num: e.target.value })}
+                          className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200"
+                          required
+                        />
+                        <input
+                          type="text"
+                          placeholder="Category tag (e.g. Civic Tech)"
+                          value={newProj.category}
+                          onChange={(e) => setNewProj({ ...newProj, category: e.target.value })}
+                          className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Project Name"
+                          value={newProj.name}
+                          onChange={(e) => setNewProj({ ...newProj, name: e.target.value })}
+                          className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200"
+                          required
                         />
                       </div>
+
+                      <textarea
+                        placeholder="Core brief context details..."
+                        value={newProj.description}
+                        onChange={(e) => setNewProj({ ...newProj, description: e.target.value })}
+                        rows={2}
+                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200 resize-none font-sans"
+                      />
+
+                      <button type="submit" className="py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-wider text-xs rounded-xl cursor-pointer">
+                        Insert Project
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ) : (
+                // SPECIFIC INDIVIDUAL PROJECT EDITOR VIEW (TABS & FIELDS)
+                (() => {
+                  const proj = data.projects[editingProjectIndex]
+                  const isCaseStudy = proj.template_type === 'casestudy'
+
+                  return (
+                    <div className="bg-[#111] p-6 sm:p-8 rounded-[40px] border border-neutral-800 flex flex-col gap-6">
+                      <div className="flex justify-between items-center border-b border-neutral-800 pb-4">
+                        <button
+                          onClick={() => setEditingProjectIndex(null)}
+                          className="text-xs text-neutral-500 hover:text-white uppercase tracking-widest font-bold bg-transparent border-none cursor-pointer"
+                        >
+                          &larr; Back to list
+                        </button>
+                        <h3 className="text-base font-bold text-white uppercase tracking-tight">
+                          Editing: {proj.name} ({isCaseStudy ? 'Case Study' : 'Visual Snack'})
+                        </h3>
+                      </div>
+
+                      {/* General Setup fields */}
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-[#0C0C0C] p-5 rounded-2xl border border-neutral-800">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Category</label>
+                          <input
+                            type="text"
+                            value={proj.category}
+                            onChange={(e) => {
+                              updateProject(editingProjectIndex, { category: e.target.value })
+                              triggerAutoSaveIndicator()
+                            }}
+                            className="bg-[#111] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Name</label>
+                          <input
+                            type="text"
+                            value={proj.name}
+                            onChange={(e) => {
+                              updateProject(editingProjectIndex, { name: e.target.value })
+                              triggerAutoSaveIndicator()
+                            }}
+                            className="bg-[#111] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Role</label>
+                          <input
+                            type="text"
+                            value={proj.role}
+                            onChange={(e) => {
+                              updateProject(editingProjectIndex, { role: e.target.value })
+                              triggerAutoSaveIndicator()
+                            }}
+                            className="bg-[#111] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] uppercase tracking-wider text-neutral-500 font-bold">Live URL</label>
+                          <input
+                            type="text"
+                            value={proj.liveUrl}
+                            onChange={(e) => {
+                              updateProject(editingProjectIndex, { liveUrl: e.target.value })
+                              triggerAutoSaveIndicator()
+                            }}
+                            className="bg-[#111] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200"
+                          />
+                        </div>
+                      </div>
+
+                      {/* --- CONDITIONAL CASE STUDY VIEW TABS --- */}
+                      {isCaseStudy ? (
+                        (() => {
+                          const cs = proj as CaseStudyProject
+                          return (
+                            <div className="flex flex-col gap-6">
+                              {/* Sub tab navigation */}
+                              <div className="flex border-b border-neutral-800 gap-1.5 pb-2 overflow-x-auto">
+                                {(['context', 'research', 'process', 'features', 'impact'] as const).map((tab) => {
+                                  const isActive = caseStudyTab === tab
+                                  return (
+                                    <button
+                                      key={tab}
+                                      onClick={() => setCaseStudyTab(tab)}
+                                      className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer bg-transparent border-none transition-colors
+                                        ${isActive ? 'text-purple-400 bg-purple-500/10' : 'text-neutral-500 hover:text-white'}`}
+                                    >
+                                      {tab}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+
+                              {caseStudyTab === 'context' && (
+                                <div className="flex flex-col gap-4">
+                                  <div className="flex flex-col gap-1">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Brief Overview Description</label>
+                                    <textarea
+                                      value={cs.description}
+                                      onChange={(e) => {
+                                        updateProject(editingProjectIndex, { description: e.target.value })
+                                        triggerAutoSaveIndicator()
+                                      }}
+                                      rows={3}
+                                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200 resize-none font-sans"
+                                    />
+                                  </div>
+                                  <div className="flex flex-col gap-1">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Problem Statement</label>
+                                    <textarea
+                                      value={cs.problem_statement || ''}
+                                      onChange={(e) => {
+                                        updateProject(editingProjectIndex, { problem_statement: e.target.value })
+                                        triggerAutoSaveIndicator()
+                                      }}
+                                      rows={3}
+                                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200 resize-none font-sans"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {caseStudyTab === 'research' && (
+                                <div className="flex flex-col gap-4">
+                                  <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Research Insights (One per line)</label>
+                                  <textarea
+                                    value={cs.research_insights ? cs.research_insights.join('\n') : ''}
+                                    onChange={(e) => {
+                                      updateProject(editingProjectIndex, {
+                                        research_insights: e.target.value.split('\n').filter(Boolean)
+                                      })
+                                      triggerAutoSaveIndicator()
+                                    }}
+                                    rows={5}
+                                    className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200 font-sans"
+                                    placeholder="e.g. 70% of respondents browse civic info exclusively via mobile viewports."
+                                  />
+                                </div>
+                              )}
+
+                              {caseStudyTab === 'process' && (
+                                <div className="flex flex-col gap-4">
+                                  <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Process Gallery Images</label>
+                                  <div className="flex flex-wrap gap-2 mb-4">
+                                    {(cs.process_gallery || []).map((img, pgIdx) => (
+                                      <div key={pgIdx} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-neutral-800">
+                                        <img src={img} className="w-full h-full object-cover" />
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const list = [...(cs.process_gallery || [])]
+                                            list.splice(pgIdx, 1)
+                                            updateProject(editingProjectIndex, { process_gallery: list })
+                                            triggerAutoSaveIndicator()
+                                          }}
+                                          className="absolute inset-0 bg-red-600/80 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-xs font-bold"
+                                        >
+                                          Remove
+                                        </button>
+                                      </div>
+                                    ))}
+                                    <div className="w-20 h-20 rounded-lg border border-dashed border-neutral-700 hover:border-purple-500 transition-colors flex items-center justify-center relative cursor-pointer overflow-hidden">
+                                      <label className="flex flex-col items-center justify-center w-full h-full text-[10px] text-neutral-500 hover:text-purple-400 cursor-pointer">
+                                        <span>+ Upload</span>
+                                        <input
+                                          type="file"
+                                          accept="image/*"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0]
+                                            if (file) {
+                                              const reader = new FileReader()
+                                              reader.onloadend = () => {
+                                                updateProject(editingProjectIndex, {
+                                                  process_gallery: [...(cs.process_gallery || []), reader.result as string]
+                                                })
+                                                triggerAutoSaveIndicator()
+                                              }
+                                              reader.readAsDataURL(file)
+                                            }
+                                          }}
+                                          className="hidden"
+                                        />
+                                      </label>
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <ImageInput
+                                      label="Thumbnail 1 Image"
+                                      value={cs.col1img1}
+                                      onChange={(val) => {
+                                        updateProject(editingProjectIndex, { col1img1: val })
+                                        triggerAutoSaveIndicator()
+                                      }}
+                                    />
+                                    <ImageInput
+                                      label="Thumbnail 2 Image"
+                                      value={cs.col1img2}
+                                      onChange={(val) => {
+                                        updateProject(editingProjectIndex, { col1img2: val })
+                                        triggerAutoSaveIndicator()
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {caseStudyTab === 'features' && (
+                                <div className="flex flex-col gap-4">
+                                  <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">High-Fi Key Features</label>
+                                  <div className="flex flex-col gap-4">
+                                    {(cs.solution_features || []).map((feat, fIdx) => (
+                                      <div key={fIdx} className="bg-[#0C0C0C] p-4 rounded-xl border border-neutral-800 flex justify-between items-center gap-4">
+                                        <div className="flex-1 flex flex-col gap-1">
+                                          <span className="text-white text-xs font-bold uppercase">{feat.title}</span>
+                                          <span className="text-[10px] text-neutral-400 font-light leading-relaxed">{feat.description}</span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const list = [...(cs.solution_features || [])]
+                                            list.splice(fIdx, 1)
+                                            updateProject(editingProjectIndex, { solution_features: list })
+                                            triggerAutoSaveIndicator()
+                                          }}
+                                          className="text-red-500 hover:text-red-400 font-bold uppercase text-[10px] bg-transparent border-none cursor-pointer"
+                                        >
+                                          Remove
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Quick inline feature input block */}
+                                  <div className="border border-neutral-800 p-4 rounded-xl mt-2 flex flex-col gap-3">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">+ New Feature Block</span>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <input
+                                        type="text"
+                                        id="new-feat-title"
+                                        placeholder="Feature Title..."
+                                        className="bg-[#0C0C0C] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200"
+                                      />
+                                      <input
+                                        type="text"
+                                        id="new-feat-desc"
+                                        placeholder="Feature Description..."
+                                        className="bg-[#0C0C0C] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200"
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const titleEl = document.getElementById('new-feat-title') as HTMLInputElement
+                                        const descEl = document.getElementById('new-feat-desc') as HTMLInputElement
+                                        if (titleEl && descEl && titleEl.value) {
+                                          updateProject(editingProjectIndex, {
+                                            solution_features: [
+                                              ...(cs.solution_features || []),
+                                              {
+                                                title: titleEl.value,
+                                                description: descEl.value,
+                                                image_url: cs.col2img // link to main cover by default
+                                              }
+                                            ]
+                                          })
+                                          triggerAutoSaveIndicator()
+                                          titleEl.value = ''
+                                          descEl.value = ''
+                                        }
+                                      }}
+                                      className="self-end py-1.5 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded text-[10px] font-bold uppercase"
+                                    >
+                                      Add Feature
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {caseStudyTab === 'impact' && (
+                                <div className="flex flex-col gap-4">
+                                  <div className="flex flex-col gap-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Success Metrics (One per line)</label>
+                                    <textarea
+                                      value={cs.success_metrics ? cs.success_metrics.join('\n') : ''}
+                                      onChange={(e) => {
+                                        updateProject(editingProjectIndex, {
+                                          success_metrics: e.target.value.split('\n').filter(Boolean)
+                                        })
+                                        triggerAutoSaveIndicator()
+                                      }}
+                                      rows={4}
+                                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200 font-sans"
+                                      placeholder="e.g. 📈 Increased voter registration turnout by 40%."
+                                    />
+                                  </div>
+
+                                  <div className="flex flex-col gap-2 border-t border-neutral-800/80 pt-4 mt-2">
+                                    <ImageInput
+                                      label="Main Case Study Cover Image"
+                                      value={cs.col2img}
+                                      onChange={(val) => {
+                                        updateProject(editingProjectIndex, { col2img: val })
+                                        triggerAutoSaveIndicator()
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })()
+                      ) : (
+                        // --- CONDITIONAL VISUAL SNACK VIEW EDITOR ---
+                        (() => {
+                          const vs = proj as VisualSnackProject
+                          return (
+                            <div className="flex flex-col gap-6">
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Brief Context details</label>
+                                <textarea
+                                  value={vs.brief_context || vs.description}
+                                  onChange={(e) => {
+                                    updateProject(editingProjectIndex, {
+                                      brief_context: e.target.value,
+                                      description: e.target.value
+                                    })
+                                    triggerAutoSaveIndicator()
+                                  }}
+                                  rows={3}
+                                  className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-xs text-neutral-200 resize-none font-sans"
+                                  placeholder="Evaluating responsive colors against ambient neon lighting..."
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Left Visual main asset uploader */}
+                                <ImageInput
+                                  label="Main Snack Mockup Visual (Media Asset)"
+                                  value={vs.media_url || vs.col2img}
+                                  onChange={(val) => {
+                                    updateProject(editingProjectIndex, {
+                                      media_url: val,
+                                      col2img: val
+                                    })
+                                    triggerAutoSaveIndicator()
+                                  }}
+                                />
+
+                                {/* Right Design System Builder */}
+                                <div className="flex flex-col gap-4 p-5 bg-[#0C0C0C] border border-neutral-800 rounded-2xl">
+                                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 flex items-center gap-1.5">
+                                    <Sliders size={12} />
+                                    Design Swatches Builder
+                                  </span>
+
+                                  {/* Swatch color row */}
+                                  <div className="flex flex-col gap-2">
+                                    <span className="text-[10px] text-neutral-400 uppercase tracking-widest">Colors Swatches</span>
+                                    <div className="flex flex-wrap gap-2.5">
+                                      {(vs.design_system?.colors || []).map((col, idx) => (
+                                        <div key={idx} className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-800 px-2 py-1 rounded-md relative group">
+                                          <span 
+                                            className="w-3.5 h-3.5 rounded-full border border-white/10"
+                                            style={{ backgroundColor: col }}
+                                          />
+                                          <span className="text-[9px] font-mono">{col}</span>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const colorsList = [...(vs.design_system?.colors || [])]
+                                              colorsList.splice(idx, 1)
+                                              updateProject(editingProjectIndex, {
+                                                design_system: {
+                                                  colors: colorsList,
+                                                  typography: vs.design_system?.typography || []
+                                                }
+                                              })
+                                              triggerAutoSaveIndicator()
+                                            }}
+                                            className="text-red-500 hover:text-red-400 font-bold ml-1 text-[9px] bg-transparent border-none cursor-pointer"
+                                          >
+                                            x
+                                          </button>
+                                        </div>
+                                      ))}
+                                      
+                                      {/* Add Color swatches inline block */}
+                                      <div className="flex items-center gap-1.5">
+                                        <input
+                                          type="color"
+                                          id="color-picker-input"
+                                          defaultValue="#8B5CF6"
+                                          className="w-6 h-6 rounded border-none bg-transparent cursor-pointer"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            const picker = document.getElementById('color-picker-input') as HTMLInputElement
+                                            if (picker) {
+                                              const colorsList = [...(vs.design_system?.colors || [])]
+                                              colorsList.push(picker.value)
+                                              updateProject(editingProjectIndex, {
+                                                design_system: {
+                                                  colors: colorsList,
+                                                  typography: vs.design_system?.typography || []
+                                                }
+                                              })
+                                              triggerAutoSaveIndicator()
+                                            }
+                                          }}
+                                          className="px-2 py-1 bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded text-[9px] font-bold uppercase cursor-pointer"
+                                        >
+                                          + Add
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Swatch fonts row */}
+                                  <div className="flex flex-col gap-2 mt-2">
+                                    <span className="text-[10px] text-neutral-400 uppercase tracking-widest">Typography Fonts (Comma separated)</span>
+                                    <input
+                                      type="text"
+                                      value={vs.design_system?.typography ? vs.design_system.typography.join(', ') : ''}
+                                      onChange={(e) => {
+                                        updateProject(editingProjectIndex, {
+                                          design_system: {
+                                            colors: vs.design_system?.colors || [],
+                                            typography: e.target.value.split(',').map((t) => t.trim()).filter(Boolean)
+                                          }
+                                        })
+                                        triggerAutoSaveIndicator()
+                                      }}
+                                      placeholder="e.g. Kanit Black, Inter Medium"
+                                      className="bg-[#111] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })()
+                      )}
+                    </div>
+                  )
+                })()
+              )}
+            </div>
+          )}
+
+          {/* SERVICES EDITING */}
+          {activeTab === 'services' && (
+            <div className="flex flex-col gap-6 max-w-3xl">
+              <div>
+                <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-1">Services & Focus Capabilities</h2>
+                <p className="text-xs text-neutral-500">Edit the structural services listings displayed on the homepage price/service grid.</p>
+              </div>
+
+              <div className="flex flex-col gap-6">
+                {data.services.map((service, index) => (
+                  <div key={index} className="bg-[#111] p-6 rounded-2xl border border-neutral-800 flex flex-col gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold uppercase text-neutral-500">Role</label>
+                        <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Index (e.g. 01)</label>
                         <input
                           type="text"
-                          value={item.role}
+                          value={service.num}
                           onChange={(e) => {
-                            const updated = [...data.about.timeline]
-                            updated[index] = { ...updated[index], role: e.target.value }
-                            updateAbout({ timeline: updated })
+                            updateService(index, { num: e.target.value })
+                            triggerAutoSaveIndicator()
                           }}
-                          className="bg-[#111] border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-200 focus:outline-none focus:border-purple-500"
+                          className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
                         />
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold uppercase text-neutral-500">Company</label>
+                      <div className="flex flex-col gap-1 col-span-2">
+                        <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Name</label>
                         <input
                           type="text"
-                          value={item.company}
+                          value={service.name}
                           onChange={(e) => {
-                            const updated = [...data.about.timeline]
-                            updated[index] = { ...updated[index], company: e.target.value }
-                            updateAbout({ timeline: updated })
+                            updateService(index, { name: e.target.value })
+                            triggerAutoSaveIndicator()
                           }}
-                          className="bg-[#111] border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-200 focus:outline-none focus:border-purple-500"
+                          className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
                         />
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold uppercase text-neutral-500">Milestone Achievements</label>
+                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Description</label>
                       <textarea
-                        value={item.description}
+                        value={service.desc}
                         onChange={(e) => {
-                          const updated = [...data.about.timeline]
-                          updated[index] = { ...updated[index], description: e.target.value }
-                          updateAbout({ timeline: updated })
+                          updateService(index, { desc: e.target.value })
+                          triggerAutoSaveIndicator()
                         }}
                         rows={2}
-                        className="bg-[#111] border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-neutral-200 focus:outline-none focus:border-purple-500 resize-none"
+                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 resize-none font-sans"
                       />
                     </div>
                   </div>
                 ))}
               </div>
+            </div>
+          )}
 
-              {/* Form to add new timeline milestone */}
-              <div className="p-4 border border-dashed border-neutral-800 rounded-xl flex flex-col gap-3 mt-2">
-                <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <PlusCircle size={14} className="text-neutral-400" />
-                  Add Journey Milestone
-                </span>
-                <div className="grid grid-cols-3 gap-3">
-                  <input
-                    type="text"
-                    value={newTimeline.year}
-                    onChange={(e) => setNewTimeline({ ...newTimeline, year: e.target.value })}
-                    placeholder="e.g. 2024 - Present"
-                    className="bg-[#0C0C0C] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200 focus:outline-none"
+          {/* MARQUEE SECTION EDITING */}
+          {activeTab === 'marquee' && (
+            <div className="flex flex-col gap-6 max-w-4xl">
+              <div>
+                <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-1">Marquee Image Board</h2>
+                <p className="text-xs text-neutral-500">Edit the GIF resources running on horizontal marquee strips.</p>
+              </div>
+
+              <div className="bg-[#111] p-6 rounded-2xl border border-neutral-800 flex flex-col gap-4">
+                <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-1">Add Image to Marquee</h3>
+                <div className="flex flex-col gap-3">
+                  <ImageInput
+                    label="New Marquee Image Source"
+                    value={newMarqueeUrl}
+                    onChange={(val) => setNewMarqueeUrl(val)}
                   />
-                  <input
-                    type="text"
-                    value={newTimeline.role}
-                    onChange={(e) => setNewTimeline({ ...newTimeline, role: e.target.value })}
-                    placeholder="e.g. Lead Designer"
-                    className="bg-[#0C0C0C] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200 focus:outline-none"
-                  />
-                  <input
-                    type="text"
-                    value={newTimeline.company}
-                    onChange={(e) => setNewTimeline({ ...newTimeline, company: e.target.value })}
-                    placeholder="e.g. Acme Agency"
-                    className="bg-[#0C0C0C] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200 focus:outline-none"
-                  />
+                  <button
+                    onClick={addMarqueeItem}
+                    disabled={!newMarqueeUrl}
+                    className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:hover:bg-purple-600 text-white font-semibold uppercase tracking-widest text-xs py-3.5 rounded-xl cursor-pointer transition-colors"
+                  >
+                    <Plus size={14} />
+                    Add to Marquee Board
+                  </button>
                 </div>
-                <textarea
-                  value={newTimeline.description}
-                  onChange={(e) => setNewTimeline({ ...newTimeline, description: e.target.value })}
-                  placeholder="Key accomplishments..."
-                  rows={2}
-                  className="bg-[#0C0C0C] border border-neutral-800 rounded-lg px-3 py-2 text-xs text-neutral-200 focus:outline-none resize-none"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddTimelineSubmit}
-                  className="bg-neutral-800 hover:bg-neutral-700 text-white font-semibold uppercase tracking-wider text-[10px] py-2.5 rounded-lg cursor-pointer transition-colors"
-                >
-                  Insert Milestone
-                </button>
+              </div>
+
+              <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 mt-4">Current Images ({data.marquee.length})</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {data.marquee.map((src, index) => (
+                  <div key={index} className="relative rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 group aspect-video">
+                    <img src={src} alt={`Marquee item ${index}`} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2">
+                      <button
+                        onClick={() => deleteMarqueeItem(index)}
+                        className="p-2 bg-red-600 hover:bg-red-500 text-white rounded-lg flex items-center justify-center cursor-pointer transition-colors"
+                        title="Remove Image"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                    <span className="absolute bottom-2 left-2 bg-black/80 px-2 py-0.5 rounded text-[10px] text-neutral-400 font-mono">
+                      #{index + 1}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* SERVICES EDITING */}
-        {activeTab === 'services' && (
-          <div className="flex flex-col gap-6">
-            <div>
-              <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-1">Services List Editor</h2>
-              <p className="text-xs text-neutral-500">Edit the detailed services items displayed on the white background block.</p>
-            </div>
-
-            <div className="flex flex-col gap-4">
-              {data.services.map((service, index) => (
-                <div key={index} className="bg-[#111] p-6 rounded-2xl border border-neutral-800 flex flex-col gap-4">
-                  <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Service #{index + 1}</span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="flex flex-col gap-1 col-span-1">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Number Index</label>
-                      <input
-                        type="text"
-                        value={service.num}
-                        onChange={(e) => updateService(index, { num: e.target.value })}
-                        placeholder="e.g. 01"
-                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1 col-span-2">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Name</label>
-                      <input
-                        type="text"
-                        value={service.name}
-                        onChange={(e) => updateService(index, { name: e.target.value })}
-                        placeholder="e.g. 3D Modeling"
-                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Description</label>
-                    <textarea
-                      value={service.desc}
-                      onChange={(e) => updateService(index, { desc: e.target.value })}
-                      placeholder="Service details..."
-                      rows={2}
-                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans resize-none"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* PROJECTS EDITING */}
-        {activeTab === 'projects' && (
-          <div className="flex flex-col gap-6">
-            <div>
-              <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-1">Projects & Sticky Stack Editor</h2>
-              <p className="text-xs text-neutral-500">Add, update, or remove portfolio items inside the cards container.</p>
-            </div>
-
-            {/* List of projects */}
-            <div className="flex flex-col gap-6">
-              {data.projects.map((proj, index) => (
-                <div key={index} className="bg-[#111] p-6 rounded-2xl border border-neutral-800 flex flex-col gap-4">
-                  <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Project Card #{index + 1}</span>
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Are you sure you want to delete "${proj.name || 'this project'}"?`)) {
-                          deleteProject(index)
-                        }
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-950/20 hover:bg-red-950/40 text-red-400 hover:text-red-300 text-xs font-semibold uppercase tracking-wider rounded-lg border border-red-900/30 cursor-pointer transition-colors"
-                    >
-                      <Trash2 size={12} />
-                      Delete Project
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Order Num</label>
-                      <input
-                        type="text"
-                        value={proj.num}
-                        onChange={(e) => updateProject(index, { num: e.target.value })}
-                        placeholder="e.g. 01"
-                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Category Tag</label>
-                      <input
-                        type="text"
-                        value={proj.category}
-                        onChange={(e) => updateProject(index, { category: e.target.value })}
-                        placeholder="e.g. Client, Personal"
-                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Name</label>
-                      <input
-                        type="text"
-                        value={proj.name}
-                        onChange={(e) => updateProject(index, { name: e.target.value })}
-                        placeholder="Project Name..."
-                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Project Role</label>
-                      <input
-                        type="text"
-                        value={proj.role || ''}
-                        onChange={(e) => updateProject(index, { role: e.target.value })}
-                        placeholder="e.g. Creative Director"
-                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Live Project URL</label>
-                      <input
-                        type="text"
-                        value={proj.liveUrl || ''}
-                        onChange={(e) => updateProject(index, { liveUrl: e.target.value })}
-                        placeholder="https://..."
-                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1 mt-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Project Description</label>
-                    <textarea
-                      value={proj.description || ''}
-                      onChange={(e) => updateProject(index, { description: e.target.value })}
-                      placeholder="Enter detailed description of the project achievements..."
-                      rows={2}
-                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans resize-none"
-                    />
-                  </div>
-
-                  {/* Case Study Textareas */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Case Study: Challenge</label>
-                      <textarea
-                        value={proj.challenge || ''}
-                        onChange={(e) => updateProject(index, { challenge: e.target.value })}
-                        placeholder="Detail the challenges faced..."
-                        rows={3}
-                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans resize-none"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Case Study: Process</label>
-                      <textarea
-                        value={proj.process || ''}
-                        onChange={(e) => updateProject(index, { process: e.target.value })}
-                        placeholder="Detail the steps & process followed..."
-                        rows={3}
-                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans resize-none"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Case Study: Outcome/Solution</label>
-                      <textarea
-                        value={proj.solution || ''}
-                        onChange={(e) => updateProject(index, { solution: e.target.value })}
-                        placeholder="Detail the final solution, metrics..."
-                        rows={3}
-                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans resize-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1 mt-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Tools Used (Comma separated)</label>
-                    <input
-                      type="text"
-                      value={proj.tools ? proj.tools.join(', ') : ''}
-                      onChange={(e) =>
-                        updateProject(index, {
-                          tools: e.target.value
-                            .split(',')
-                            .map((t) => t.trim())
-                            .filter(Boolean),
-                        })
-                      }
-                      placeholder="e.g. Figma, Blender, Cinema 4D"
-                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                    />
-                  </div>
-
-                  {/* Extra Case Study Images */}
-                  <div className="flex flex-col gap-2 mt-2 p-4 bg-[#111] border border-neutral-800 rounded-2xl">
-                    <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Extra Case Study Gallery Images</label>
-                    <div className="flex flex-wrap gap-2">
-                      {(proj.extraImages || []).map((img, imgIdx) => (
-                        <div key={imgIdx} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-neutral-800">
-                          <img src={img} className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const list = [...(proj.extraImages || [])]
-                              list.splice(imgIdx, 1)
-                              updateProject(index, { extraImages: list })
-                            }}
-                            className="absolute inset-0 bg-red-600/80 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-xs font-bold"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ))}
-                      <div className="w-20 h-20 rounded-lg border border-dashed border-neutral-700 hover:border-purple-500 transition-colors flex items-center justify-center relative cursor-pointer overflow-hidden">
-                        <label className="flex flex-col items-center justify-center w-full h-full text-[10px] text-neutral-500 hover:text-purple-400 cursor-pointer">
-                          <span>+ Upload</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0]
-                              if (file) {
-                                const reader = new FileReader()
-                                reader.onloadend = () => {
-                                  updateProject(index, {
-                                    extraImages: [...(proj.extraImages || []), reader.result as string]
-                                  })
-                                }
-                                reader.readAsDataURL(file)
-                              }
-                            }}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                    <ImageInput
-                      label="Left Col Image 1 (Small)"
-                      value={proj.col1img1}
-                      onChange={(val) => updateProject(index, { col1img1: val })}
-                    />
-                    <ImageInput
-                      label="Left Col Image 2 (Medium)"
-                      value={proj.col1img2}
-                      onChange={(val) => updateProject(index, { col1img2: val })}
-                    />
-                    <ImageInput
-                      label="Right Col Main Image (Tall)"
-                      value={proj.col2img}
-                      onChange={(val) => updateProject(index, { col2img: val })}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Form to add a new project */}
-            <div className="bg-[#111] p-6 rounded-2xl border border-neutral-800 flex flex-col gap-4 mt-6">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 border-b border-neutral-800 pb-3 flex items-center gap-2">
-                <PlusCircle size={16} className="text-neutral-400" />
-                Add New Project
-              </h3>
-
-              <form onSubmit={handleAddProjectSubmit} className="flex flex-col gap-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Order Index (e.g., 04)</label>
-                    <input
-                      type="text"
-                      value={newProj.num}
-                      onChange={(e) => setNewProj({ ...newProj, num: e.target.value })}
-                      placeholder="e.g. 04"
-                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                      required
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Category Tag</label>
-                    <input
-                      type="text"
-                      value={newProj.category}
-                      onChange={(e) => setNewProj({ ...newProj, category: e.target.value })}
-                      placeholder="e.g. Client / Personal"
-                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                      required
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Project Name</label>
-                    <input
-                      type="text"
-                      value={newProj.name}
-                      onChange={(e) => setNewProj({ ...newProj, name: e.target.value })}
-                      placeholder="New Project Title..."
-                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Project Role</label>
-                    <input
-                      type="text"
-                      value={newProj.role}
-                      onChange={(e) => setNewProj({ ...newProj, role: e.target.value })}
-                      placeholder="e.g. Creative Director"
-                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Live Project URL</label>
-                    <input
-                      type="text"
-                      value={newProj.liveUrl}
-                      onChange={(e) => setNewProj({ ...newProj, liveUrl: e.target.value })}
-                      placeholder="https://..."
-                      className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Project Description</label>
-                  <textarea
-                    value={newProj.description}
-                    onChange={(e) => setNewProj({ ...newProj, description: e.target.value })}
-                    placeholder="Enter detailed description of the project achievements..."
-                    rows={2}
-                    className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans resize-none"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Tools Used (Comma separated)</label>
-                  <input
-                    type="text"
-                    value={newProj.tools ? newProj.tools.join(', ') : ''}
-                    onChange={(e) =>
-                      setNewProj({
-                        ...newProj,
-                        tools: e.target.value
-                          .split(',')
-                          .map((t) => t.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                    placeholder="e.g. Figma, Blender, Cinema 4D"
-                    className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <ImageInput
-                    label="Left Col Image 1"
-                    value={newProj.col1img1}
-                    onChange={(val) => setNewProj({ ...newProj, col1img1: val })}
-                  />
-                  <ImageInput
-                    label="Left Col Image 2"
-                    value={newProj.col1img2}
-                    onChange={(val) => setNewProj({ ...newProj, col1img2: val })}
-                  />
-                  <ImageInput
-                    label="Right Col Main Image"
-                    value={newProj.col2img}
-                    onChange={(val) => setNewProj({ ...newProj, col2img: val })}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="mt-2 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold uppercase tracking-widest text-xs py-3.5 rounded-xl cursor-pointer transition-colors"
-                >
-                  <Plus size={14} />
-                  Insert New Project
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* MARQUEE SECTION EDITING */}
-        {activeTab === 'marquee' && (
-          <div className="flex flex-col gap-6">
-            <div>
-              <h2 className="text-xl font-bold uppercase tracking-tight text-white mb-1">Marquee Image Board</h2>
-              <p className="text-xs text-neutral-500">Edit the GIF resources running on horizontal marquee strips.</p>
-            </div>
-
-            <div className="bg-[#111] p-6 rounded-2xl border border-neutral-800 flex flex-col gap-4">
-              <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest mb-1">Add Image to Marquee</h3>
-              <div className="flex flex-col gap-3">
-                <ImageInput
-                  label="New Marquee Image Source"
-                  value={newMarqueeUrl}
-                  onChange={(val) => setNewMarqueeUrl(val)}
-                />
-                <button
-                  onClick={addMarqueeItem}
-                  disabled={!newMarqueeUrl}
-                  className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 disabled:hover:bg-purple-600 text-white font-semibold uppercase tracking-widest text-xs py-3.5 rounded-xl cursor-pointer transition-colors"
-                >
-                  <Plus size={14} />
-                  Add to Marquee Board
-                </button>
-              </div>
-            </div>
-
-            <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-400 mt-4">Current Images ({data.marquee.length})</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {data.marquee.map((src, index) => (
-                <div key={index} className="relative rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900 group aspect-video">
-                  <img src={src} alt={`Marquee item ${index}`} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2">
-                    <button
-                      onClick={() => deleteMarqueeItem(index)}
-                      className="p-2 bg-red-600 hover:bg-red-500 text-white rounded-lg flex items-center justify-center cursor-pointer transition-colors"
-                      title="Remove Image"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                  <span className="absolute bottom-2 left-2 bg-black/80 px-2 py-0.5 rounded text-[10px] text-neutral-400 font-mono">
-                    #{index + 1}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
+      </div>
     </div>
   )
 }

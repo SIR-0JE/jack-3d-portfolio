@@ -1,15 +1,59 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { PortfolioProvider } from './context/PortfolioContext'
 import HeroSection from './sections/HeroSection'
-import MarqueeSection from './sections/MarqueeSection'
-import AboutSection from './sections/AboutSection'
 import ProjectsSection from './sections/ProjectsSection'
-import ServicesSection from './sections/ServicesSection'
+import ProcessSection from './sections/ProcessSection'
+import VisualPlayground from './sections/VisualPlayground'
+import TestimonialSlider from './sections/TestimonialSlider'
+import FooterCTA from './sections/FooterCTA'
 import Navbar from './components/Navbar'
 import AboutPage from './components/AboutPage'
 import ProjectsPage from './components/ProjectsPage'
 import AdminPanel from './components/AdminPanel'
 import ProjectDetailPage from './components/ProjectDetailPage'
+
+function CustomCursor() {
+  const [position, setPosition] = useState({ x: -100, y: -100 })
+  const [hovered, setHovered] = useState(false)
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setPosition({ x: e.clientX, y: e.clientY })
+    }
+
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const isInteractive = 
+        target.tagName === 'BUTTON' || 
+        target.tagName === 'A' || 
+        target.closest('a') || 
+        target.closest('button') || 
+        target.classList.contains('cursor-pointer') ||
+        target.closest('.cursor-pointer')
+      
+      setHovered(!!isInteractive)
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    window.addEventListener('mouseover', handleMouseOver)
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseover', handleMouseOver)
+    }
+  }, [])
+
+  return (
+    <div
+      className={`fixed top-0 left-0 w-4 h-4 rounded-full pointer-events-none z-50 mix-blend-difference bg-white -translate-x-1/2 -translate-y-1/2 transition-transform duration-150 ease-out hidden md:block
+        ${hovered ? 'scale-[2.5]' : 'scale-100'}`}
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+      }}
+    />
+  )
+}
 
 function MainContent() {
   const [currentRoute, setCurrentRoute] = useState(() => {
@@ -44,8 +88,9 @@ function MainContent() {
         fontFamily: "'Kanit', sans-serif",
         overflowX: 'clip',
       }}
-      className="min-h-screen flex flex-col"
+      className="min-h-screen flex flex-col select-none"
     >
+      <CustomCursor />
       <Navbar />
       
       {/* Route Switcher */}
@@ -56,12 +101,16 @@ function MainContent() {
         {(currentRoute === '#/' || currentRoute === '') && (
           <>
             <HeroSection />
-            <MarqueeSection />
-            {/* About Preview — teases the full About page */}
-            <AboutSection />
-            {/* Projects Preview — shows first 2 cards, links to full page */}
+            {/* Featured Outcomes Card Previews */}
             <ProjectsSection preview />
-            <ServicesSection />
+            {/* Interactive Process steps */}
+            <ProcessSection />
+            {/* Visual Grid Gallery (CSS Masonry) */}
+            <VisualPlayground />
+            {/* Draggable Client Review comments */}
+            <TestimonialSlider />
+            {/* Closing Footer with glowing Email CTA */}
+            <FooterCTA />
           </>
         )}
       </main>

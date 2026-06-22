@@ -31,22 +31,45 @@ export interface ServiceData {
   desc: string
 }
 
-export interface ProjectData {
-  num: string
+// Shared project properties
+export interface BaseProject {
+  num: string // used as ID
   category: string
   name: string
-  col1img1: string
-  col1img2: string
-  col2img: string
+  col1img1: string // thumbnail helper
+  col1img2: string // thumbnail helper
+  col2img: string // main thumbnail
   description: string
   role: string
   tools: string[]
   liveUrl: string
-  challenge?: string
-  process?: string
-  solution?: string
-  extraImages?: string[]
 }
+
+// Discriminated Union types
+export interface CaseStudyProject extends BaseProject {
+  template_type: 'casestudy'
+  problem_statement: string
+  research_insights: string[] // bullet points
+  process_gallery: string[] // wireframe assets etc
+  solution_features: Array<{
+    title: string
+    description: string
+    image_url: string
+  }>
+  success_metrics: string[] // e.g. ["📈 Increased voter turnout by 40%"]
+}
+
+export interface VisualSnackProject extends BaseProject {
+  template_type: 'visual'
+  media_url: string
+  brief_context: string
+  design_system?: {
+    colors: string[]
+    typography: string[]
+  }
+}
+
+export type ProjectData = CaseStudyProject | VisualSnackProject
 
 export interface PortfolioData {
   hero: HeroData
@@ -58,8 +81,8 @@ export interface PortfolioData {
 
 const defaultPortfolioData: PortfolioData = {
   hero: {
-    title: "Hi, i'm jack",
-    subtitle: 'a 3d creator driven by crafting striking and unforgettable projects',
+    title: "I design digital products that solve complex problems.",
+    subtitle: 'Niyi — UI/UX & Product Designer.',
     portrait: 'https://shrug-person-78902957.figma.site/_components/v2/d24c01ad3a56fc65e942a1f501eb73db42d7cf9a/Rectangle_40443.81459862.png',
     portraitHover: '/smiling_portrait.png',
   },
@@ -74,132 +97,112 @@ const defaultPortfolioData: PortfolioData = {
     'https://motionsites.ai/assets/hero-terra-preview-BFjrCr7T.gif',
     'https://motionsites.ai/assets/hero-skyelite-preview-DHaZIgUv.gif',
     'https://motionsites.ai/assets/hero-aethera-preview-DknSlcTa.gif',
-    'https://motionsites.ai/assets/hero-designpro-preview-D8c5_een.gif',
-    'https://motionsites.ai/assets/hero-stellar-ai-preview-D3HL6bw1.gif',
-    'https://motionsites.ai/assets/hero-xportfolio-preview-D4A8maiC.gif',
-    'https://motionsites.ai/assets/hero-orbit-web3-preview-BXt4OttD.gif',
-    'https://motionsites.ai/assets/hero-nexora-preview-cx5HmUgo.gif',
-    'https://motionsites.ai/assets/hero-evr-ventures-preview-DZxeVFEX.gif',
-    'https://motionsites.ai/assets/hero-planet-orbit-preview-DWAP8Z1P.gif',
-    'https://motionsites.ai/assets/hero-new-era-preview-CocuDUm9.gif',
-    'https://motionsites.ai/assets/hero-wealth-preview-B70idl_u.gif',
-    'https://motionsites.ai/assets/hero-luminex-preview-CxOP7ce6.gif',
-    'https://motionsites.ai/assets/hero-celestia-preview-0yO3jXO8.gif',
   ],
   about: {
     title: 'About me',
-    description: "With more than five years of experience in design, i focus on branding, web design, and user experience, i truly enjoy working with businesses that aim to stand out and present their best image. Let's build something incredible together!",
+    description: "With more than five years of experience in product design, i focus on user research, UI systems, and high-fidelity interaction design. I build clean, high-performance interfaces that connect businesses with their users.",
     decorMoon: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/moon_icon.11395d36.png',
     decorP59: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/p59_1.4659672e.png',
     decorLego: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/lego_icon-1.703bb594.png',
     decorGroup: 'https://shrug-person-78902957.figma.site/_components/v2/ebb2b8f25d8e24d5f0a5ca8af4c950de81aa2fd7/Group_134-1.2e04f3ce.png',
-    skills: ['3D Modeling', 'Rendering', 'Motion Design', 'Branding', 'Web Design', 'UI/UX'],
+    skills: ['UI/UX Design', 'Interaction Systems', 'Information Architecture', 'User Research', 'Framer Motion', 'Product Strategy'],
     timeline: [
       {
         year: '2024 - Present',
-        role: 'Lead 3D & Web Designer',
-        company: 'Nextlevel Studio',
-        description: 'Spearheaded rebranding and interactive high-end web designs for a series of international clients, integrating custom 3D web visuals.'
+        role: 'Senior Product Designer',
+        company: 'Voterix Tech',
+        description: 'Led user research and logic workflows for the Voterix platform, introducing accessible UI architectures that improved voter registration rates by 40%.'
       },
       {
         year: '2022 - 2024',
-        role: '3D Generalist',
-        company: 'Aura Media',
-        description: 'Created photorealistic product renders and commercial motion design sequences for consumer brands.'
+        role: 'UI/UX Designer',
+        company: 'Electify Lab',
+        description: 'Designed interactive civic dashboards and logic wireframes for government and ngo clients.'
       },
       {
-        year: '2021 - 2022',
-        role: 'Freelance Creative',
-        company: 'Self-Employed',
-        description: 'Built design systems, brand identities, and customized Webflow/Vite web experiences for local startups.'
+        year: '2020 - 2022',
+        role: 'Product Designer',
+        company: 'DesignPro Studio',
+        description: 'Crafted design systems, visual mockups, and high-fidelity product prototypes for early stage startups.'
       }
     ]
   },
   services: [
     {
       num: '01',
-      name: '3D Modeling',
-      desc: 'Creation of detailed objects, characters, or environments tailored to specific client needs, ideal for games, products, and visualizations.',
+      name: 'User Research',
+      desc: 'Conducting deep user interviews, mapping persona logic, and building information architecture to guide product decisions.',
     },
     {
       num: '02',
-      name: 'Rendering',
-      desc: 'High-quality, photorealistic renders that showcase designs with custom lighting, textures, and materials to bring concepts to life.',
+      name: 'Interaction Design',
+      desc: 'Creating high-fidelity, interactive animations and transitions that make product workflows clear, responsive, and delightful.',
     },
     {
       num: '03',
-      name: 'Motion Design',
-      desc: 'Dynamic animations and motion graphics that add energy and storytelling to brands, products, and digital experiences.',
-    },
-    {
-      num: '04',
-      name: 'Branding',
-      desc: 'Crafting cohesive visual identities -- from logos to full brand systems -- that communicate a clear and memorable presence.',
-    },
-    {
-      num: '05',
-      name: 'Web Design',
-      desc: 'Designing clean, modern, and conversion-focused websites with attention to layout, typography, and user experience.',
+      name: 'Design Systems',
+      desc: 'Structuring unified tokens, component systems, and documentation guidelines that enable fast, scalable developer handoff.',
     },
   ],
   projects: [
     {
       num: '01',
-      category: 'Client',
-      name: 'Nextlevel Studio',
+      category: 'Civic Tech',
+      name: 'Voterix App',
       col1img1:
         'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055344_5eff02e0-87a5-41ce-b64f-eb08da8f33db.png&w=1280&q=85',
       col1img2:
         'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055431_11d841fd-8b41-46a5-82e4-b04f2407a7d8.png&w=1280&q=85',
       col2img:
         'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055451_e317bf2d-28d4-48cc-86b0-6f72f25b6327.png&w=1280&q=85',
-      description: 'Nextlevel Studio is a leading agency focused on immersive web experiences. We redesigned their digital footprint from scratch, combining interactive 3D elements with sleek performance optimization.',
-      role: 'Lead 3D & Web Designer',
-      tools: ['Spline', 'React', 'Framer Motion', 'Blender'],
-      liveUrl: 'https://nextlevel.studio',
-      challenge: 'The legacy Nextlevel platform suffered from sluggish load times and outdated visual guides. The brand needed an interface that felt interactive, modern, and aligned with premium 3D graphics standards.',
-      process: 'We mapped out structural page layouts, created high-fidelity glass-textured 3D models in Blender, exported them via Spline for real-time reactivity, and tied the interface together using custom React hooks.',
-      solution: 'A highly functional and responsive site offering seamless 60fps animations. Brand metrics showed an immediate 40% rise in session length and elevated client signups.',
-      extraImages: []
+      description: 'An accessible mobile voting registry helping citizens find polling places, review candidate backgrounds, and securely check registration statuses.',
+      role: 'Lead UI/UX Designer',
+      tools: ['Figma', 'React', 'Framer Motion'],
+      liveUrl: 'https://voterix.org',
+      template_type: 'casestudy',
+      problem_statement: 'Voter registration platforms are frequently dense and difficult to navigate on mobile devices, leading to lower engagement rates among young voters.',
+      research_insights: [
+        '70% of respondents browse civic info exclusively via mobile viewports.',
+        'Users abandon registration if forms require more than three multi-step segments.',
+        'Simplified color tokens and progress indicators reduce cognitive load by 25%.'
+      ],
+      process_gallery: [
+        'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055654_911201c5-36d9-4bc6-bac7-331adfce159f.png&w=1280&q=85',
+        'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055723_5ceda0b8-d9c2-4665-b2e3-83ba19ba76d1.png&w=1280&q=85'
+      ],
+      solution_features: [
+        {
+          title: '3-Step Easy Registration',
+          description: 'A structured workflow utilizing verified government API endpoints to index data in seconds.',
+          image_url: 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055451_e317bf2d-28d4-48cc-86b0-6f72f25b6327.png&w=1280&q=85'
+        }
+      ],
+      success_metrics: [
+        '📈 Increased voter turnout by 40%.'
+      ]
     },
     {
       num: '02',
-      category: 'Personal',
-      name: 'Aura Brand Identity',
+      category: 'Visual Design',
+      name: 'Glassmorphic HUD',
       col1img1:
         'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055654_911201c5-36d9-4bc6-bac7-331adfce159f.png&w=1280&q=85',
       col1img2:
         'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055723_5ceda0b8-d9c2-4665-b2e3-83ba19ba76d1.png&w=1280&q=85',
       col2img:
         'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055753_adc5dcbd-a8e6-49c0-b43a-9b030d835cea.png&w=1280&q=85',
-      description: 'A modular, premium brand identity designed for a modern venture capital firm. Features custom typography, organic 3D glass objects, and cohesive print-digital brand guidelines.',
-      role: 'Creative Director',
-      tools: ['Figma', 'Cinema 4D', 'Photoshop', 'Illustrator'],
-      liveUrl: '', // Hiding the button for demo purposes
-      challenge: 'Aura VC wanted to break away from sterile corporate imagery. They needed a visual style highlighting transparency, premium reliability, and future-focused asset growth.',
-      process: 'We developed an abstract typographic system and generated translucent 3D shapes representing fluid financial parameters. Mockups were built to test usability across digital collateral.',
-      solution: 'A cohesive brand playbook including logo variations, typography parameters, and a signature set of 3D renders that give Aura a unique aesthetic edge.',
-      extraImages: []
-    },
-    {
-      num: '03',
-      category: 'Client',
-      name: 'Solaris Digital',
-      col1img1:
-        'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055759_963cfb0b-4bd1-4b0f-9d0a-09bd6cf95b2f.png&w=1280&q=85',
-      col1img2:
-        'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_060108_438f781a-9846-4dcc-89ab-c4e6cb830f5b.png&w=1280&q=85',
-      col2img:
-        'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055818_9d062121-ad7e-46b9-999a-1a6a692ef1ee.png&w=1280&q=85',
-      description: 'A high-fidelity landing page for a Web3 tech incubator. Built around an interactive planet orbit simulation, optimized for smooth 60fps renders on mobile devices.',
-      role: 'Lead Developer',
-      tools: ['Vite', 'Three.js', 'Tailwind CSS', 'Blender'],
-      liveUrl: 'https://solaris.digital',
-      challenge: 'Incubating startups struggle to communicate their technical architecture. Solaris needed a visual anchor explaining their ecosystem in a simple, interactive format.',
-      process: 'Tuned WebGL render passes within a custom Three.js scene. Set up responsive sizing layers to guarantee stability across low-tier mobile devices.',
-      solution: 'An engaging space-themed sandbox dashboard showing real-time venture paths. The product launch gained significant traction on digital lists.',
-      extraImages: []
-    },
+      description: 'A design study on glassmorphic HUD interfaces incorporating real-time ambient lighting and neon highlights.',
+      role: 'UI Designer',
+      tools: ['Figma', 'Photoshop'],
+      liveUrl: '',
+      template_type: 'visual',
+      media_url: 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260412_055753_adc5dcbd-a8e6-49c0-b43a-9b030d835cea.png&w=1280&q=85',
+      brief_context: 'Created to evaluate user reaction speeds against glass-textured UI layers and bright, glowing outline parameters.',
+      design_system: {
+        colors: ['#8B5CF6', '#10B981', '#0C0C0C'],
+        typography: ['Kanit Black', 'Inter Medium']
+      }
+    }
   ],
 }
 
@@ -226,13 +229,20 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       try {
         const parsed = JSON.parse(saved)
         // Backwards compatibility for projects schema updates
-        const updatedProjects = (parsed.projects || []).map((p: any) => ({
-          challenge: '',
-          process: '',
-          solution: '',
-          extraImages: [],
-          ...p,
-        }))
+        const updatedProjects = (parsed.projects || []).map((p: any) => {
+          if (!p.template_type) {
+            return {
+              template_type: 'casestudy',
+              problem_statement: p.challenge || '',
+              research_insights: [],
+              process_gallery: p.col1img1 ? [p.col1img1] : [],
+              solution_features: [],
+              success_metrics: [],
+              ...p,
+            }
+          }
+          return p
+        })
         
         return {
           ...defaultPortfolioData,
@@ -297,7 +307,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateProject = (index: number, project: Partial<ProjectData>) => {
     setData((prev) => {
       const updatedProjects = [...prev.projects]
-      updatedProjects[index] = { ...updatedProjects[index], ...project }
+      updatedProjects[index] = { ...updatedProjects[index], ...project } as ProjectData
       return { ...prev, projects: updatedProjects }
     })
   }
