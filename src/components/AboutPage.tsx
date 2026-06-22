@@ -110,7 +110,7 @@ const AboutPage: React.FC = () => {
           </FadeIn>
           <FadeIn delay={0.2} y={30} className="w-full">
             <div className="flex flex-wrap justify-center gap-3 max-w-2xl">
-              {data.about.skills.map((skill, index) => (
+              {(data.about.skills || []).map((skill, index) => (
                 <div
                   key={index}
                   className="px-5 py-2.5 rounded-full border border-neutral-800 bg-neutral-900/40 text-neutral-300 font-medium uppercase tracking-wider text-xs sm:text-sm hover:border-purple-500 hover:text-white transition-all duration-300 hover:shadow-[0_0_15px_rgba(168,85,247,0.15)] cursor-default"
@@ -131,7 +131,7 @@ const AboutPage: React.FC = () => {
           </FadeIn>
 
           <div className="w-full max-w-2xl relative border-l border-neutral-800 ml-4 pl-6 sm:pl-8 flex flex-col gap-10">
-            {data.about.timeline.map((item, index) => (
+            {(data.about.timeline || []).map((item, index) => (
               <FadeIn key={index} delay={index * 0.15} y={30} className="relative">
                 {/* Timeline node dot */}
                 <div className="absolute -left-[31px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-purple-500 border-4 border-[#0C0C0C] shadow-[0_0_10px_rgba(168,85,247,0.5)]" />

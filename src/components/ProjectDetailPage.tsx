@@ -117,7 +117,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectNum }) => 
                 Tools Used
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {project.tools.map((t, idx) => (
+                {(project.tools || []).map((t, idx) => (
                   <span key={idx} className="px-2.5 py-1 text-[10px] rounded-md bg-neutral-900 border border-neutral-800 text-neutral-400 uppercase tracking-widest font-mono">
                     {t}
                   </span>
@@ -303,7 +303,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectNum }) => 
               {vs.role || 'UI Designer'}
             </span>
             <div className="flex flex-wrap gap-1.5 mt-1.5">
-              {vs.tools.map((t, idx) => (
+              {(vs.tools || []).map((t, idx) => (
                 <span key={idx} className="px-2.5 py-1 text-[10px] rounded-md bg-neutral-900 border border-neutral-800 text-neutral-400 uppercase tracking-widest font-mono">
                   {t}
                 </span>

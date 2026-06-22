@@ -230,18 +230,29 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const parsed = JSON.parse(saved)
         // Backwards compatibility for projects schema updates
         const updatedProjects = (parsed.projects || []).map((p: any) => {
-          if (!p.template_type) {
+          const base = {
+            tools: p.tools || [],
+            ...p
+          }
+          if (base.template_type === 'casestudy' || !base.template_type) {
             return {
               template_type: 'casestudy',
-              problem_statement: p.challenge || '',
-              research_insights: [],
-              process_gallery: p.col1img1 ? [p.col1img1] : [],
-              solution_features: [],
-              success_metrics: [],
-              ...p,
+              problem_statement: base.problem_statement || base.challenge || '',
+              research_insights: base.research_insights || [],
+              process_gallery: base.process_gallery || (base.col1img1 ? [base.col1img1] : []),
+              solution_features: base.solution_features || [],
+              success_metrics: base.success_metrics || [],
+              ...base,
+            }
+          } else {
+            return {
+              template_type: 'visual',
+              media_url: base.media_url || base.col2img || '',
+              brief_context: base.brief_context || base.description || '',
+              design_system: base.design_system || { colors: [], typography: [] },
+              ...base,
             }
           }
-          return p
         })
         
         return {
