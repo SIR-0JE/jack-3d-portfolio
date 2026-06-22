@@ -102,7 +102,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, totalCards, s
                   Tools Used
                 </span>
                 <div className="flex flex-wrap gap-1.5">
-                  {project.tools.map((tool, tIdx) => (
+                  {(project.tools || []).map((tool, tIdx) => (
                     <span
                       key={tIdx}
                       className="px-2.5 py-1 text-[10px] rounded-md bg-neutral-900 border border-neutral-800 text-neutral-400 uppercase tracking-widest font-mono"

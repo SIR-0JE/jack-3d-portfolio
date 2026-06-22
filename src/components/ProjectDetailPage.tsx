@@ -168,7 +168,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectNum }) => 
                 Insights & IA
               </h2>
               <div className="md:col-span-8 flex flex-col gap-3">
-                {cs.research_insights.map((insight, idx) => (
+                {(cs.research_insights || []).map((insight, idx) => (
                   <div key={idx} className="flex gap-2 text-neutral-300 text-sm sm:text-base font-light">
                     <span className="text-purple-400 font-bold">&bull;</span>
                     <p>{insight}</p>
@@ -181,7 +181,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectNum }) => 
           {/* Wireframes process gallery */}
           {cs.process_gallery && cs.process_gallery.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full my-4">
-              {cs.process_gallery.map((img, i) => (
+              {(cs.process_gallery || []).map((img, i) => (
                 <FadeIn key={i} delay={0.1 * i} y={30} className="w-full">
                   <div className="rounded-[30px] overflow-hidden border border-neutral-800/40 h-[220px] sm:h-[320px]">
                     <img src={img} alt="Process visual highlights" className="w-full h-full object-cover" />
@@ -198,7 +198,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectNum }) => 
                 Key Features & High-Fi
               </h2>
               <div className="grid grid-cols-1 gap-12">
-                {cs.solution_features.map((feature, idx) => (
+                {(cs.solution_features || []).map((feature, idx) => (
                   <FadeIn key={idx} delay={0.1 * idx} y={30} className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-10 items-center">
                     <div className="md:col-span-6 flex flex-col gap-3">
                       <h3 className="text-white text-lg font-bold uppercase tracking-tight">{feature.title}</h3>
@@ -220,7 +220,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectNum }) => 
                 The Outcome
               </h2>
               <div className="md:col-span-8 flex flex-col gap-3">
-                {cs.success_metrics.map((metric, idx) => (
+                {(cs.success_metrics || []).map((metric, idx) => (
                   <div key={idx} className="flex items-center gap-2.5 text-sm sm:text-base text-green-400 font-bold uppercase tracking-wider font-mono">
                     <CheckCircle2 size={16} />
                     {metric}
@@ -324,7 +324,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectNum }) => 
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[10px] text-neutral-400 uppercase tracking-widest">Colors</span>
                   <div className="flex flex-wrap gap-2">
-                    {vs.design_system.colors.map((color, cIdx) => (
+                    {(vs.design_system.colors || []).map((color, cIdx) => (
                       <div key={cIdx} className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-800 px-2 py-1 rounded-md">
                         <span 
                           className="w-3.5 h-3.5 rounded-full border border-white/10"
@@ -342,7 +342,7 @@ const ProjectDetailPage: React.FC<ProjectDetailPageProps> = ({ projectNum }) => 
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[10px] text-neutral-400 uppercase tracking-widest">Typography</span>
                   <div className="flex flex-wrap gap-1.5">
-                    {vs.design_system.typography.map((font, fIdx) => (
+                    {(vs.design_system.typography || []).map((font, fIdx) => (
                       <span key={fIdx} className="px-2.5 py-1 rounded-md bg-neutral-900 border border-neutral-800 text-[9px] text-neutral-300 font-mono tracking-wider">
                         {font}
                       </span>

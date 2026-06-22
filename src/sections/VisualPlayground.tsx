@@ -133,7 +133,7 @@ const VisualPlayground: React.FC = () => {
                   <div className="flex flex-col gap-1.5">
                     <span className="text-[10px] text-neutral-400 uppercase tracking-widest">Colors</span>
                     <div className="flex flex-wrap gap-2.5">
-                      {selectedProject.design_system.colors.map((color, cIdx) => (
+                      {(selectedProject.design_system.colors || []).map((color, cIdx) => (
                         <div key={cIdx} className="flex items-center gap-1.5 bg-neutral-900/60 border border-neutral-800/40 px-2.5 py-1.5 rounded-full">
                           <span 
                             className="w-3.5 h-3.5 rounded-full border border-white/10"
@@ -151,7 +151,7 @@ const VisualPlayground: React.FC = () => {
                   <div className="flex flex-col gap-1.5 mt-2">
                     <span className="text-[10px] text-neutral-400 uppercase tracking-widest">Typography</span>
                     <div className="flex flex-wrap gap-1.5">
-                      {selectedProject.design_system.typography.map((font, fIdx) => (
+                      {(selectedProject.design_system.typography || []).map((font, fIdx) => (
                         <span key={fIdx} className="px-3 py-1 rounded-md bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-300 font-mono tracking-wider">
                           {font}
                         </span>
