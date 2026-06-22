@@ -34,7 +34,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, totalCards, s
 
   return (
     <div
-      className="min-h-[90vh] sm:h-[85vh] flex items-start sticky top-28 md:top-36 pb-12"
+      className="min-h-[60vh] sm:min-h-[70vh] py-6 sm:py-8 flex items-start sticky top-28 md:top-36 pb-12"
       style={{ top: `${index * 32}px` }}
     >
       <motion.div
@@ -44,7 +44,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, totalCards, s
           transformOrigin: 'top center',
           borderRadius,
         }}
-        className="w-full border border-neutral-800 bg-[#0E0E0E] p-5 sm:p-7 md:p-9 shadow-2xl flex flex-col gap-6 sm:gap-8 justify-between"
+        className="w-full border border-neutral-800 bg-[#0E0E0E] p-5 sm:p-7 md:p-9 shadow-2xl flex flex-col gap-6 sm:gap-8 justify-between overflow-hidden"
       >
         {/* Card Header */}
         <div className="flex items-center justify-between gap-4 flex-wrap border-b border-white/5 pb-4">
