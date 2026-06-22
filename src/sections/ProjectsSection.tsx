@@ -49,9 +49,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, totalCards, s
       >
         {/* Top row */}
         <div className="flex items-center justify-between mb-4 sm:mb-6 gap-4 flex-wrap">
-          <div className="flex items-baseline gap-4 sm:gap-6">
+          <div 
+            className="flex items-baseline gap-4 sm:gap-6 cursor-pointer group"
+            onClick={() => { window.location.hash = `#/project/${project.num}` }}
+          >
             <span
-              className="hero-heading font-black leading-none"
+              className="hero-heading font-black leading-none group-hover:opacity-80 transition-opacity"
               style={{ fontSize: 'clamp(3rem, 10vw, 140px)' }}
             >
               {project.num}
@@ -64,18 +67,26 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, totalCards, s
                 {project.category}
               </span>
               <span
-                className="text-[#D7E2EA] font-medium uppercase tracking-wide"
+                className="text-[#D7E2EA] font-medium uppercase tracking-wide group-hover:text-purple-400 transition-colors"
                 style={{ fontSize: 'clamp(1rem, 2.2vw, 2.1rem)' }}
               >
                 {project.name}
               </span>
             </div>
           </div>
-          <LiveProjectButton />
+          <button
+            onClick={() => { window.location.hash = `#/project/${project.num}` }}
+            className="rounded-full border-2 border-[#D7E2EA] text-[#D7E2EA] font-medium uppercase tracking-widest px-8 py-3 sm:px-10 sm:py-3.5 text-sm sm:text-base transition-colors duration-200 hover:bg-[#D7E2EA]/10 cursor-pointer bg-transparent"
+          >
+            View Project
+          </button>
         </div>
 
         {/* Bottom row - image grid */}
-        <div className="flex gap-3 sm:gap-4">
+        <div 
+          className="flex gap-3 sm:gap-4 cursor-pointer"
+          onClick={() => { window.location.hash = `#/project/${project.num}` }}
+        >
           {/* Left column - 40% */}
           <div className="flex flex-col gap-3 sm:gap-4" style={{ width: '40%' }}>
             {project.col1img1 && (

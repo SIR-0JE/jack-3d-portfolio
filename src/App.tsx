@@ -9,6 +9,7 @@ import Navbar from './components/Navbar'
 import AboutPage from './components/AboutPage'
 import ProjectsPage from './components/ProjectsPage'
 import AdminPanel from './components/AdminPanel'
+import ProjectDetailPage from './components/ProjectDetailPage'
 
 function MainContent() {
   const [currentRoute, setCurrentRoute] = useState(() => {
@@ -31,6 +32,10 @@ function MainContent() {
     return <AdminPanel />
   }
 
+  // Parse dynamic project case study routes: #/project/:num
+  const isProjectDetail = currentRoute.startsWith('#/project/')
+  const projectNum = isProjectDetail ? currentRoute.replace('#/project/', '') : ''
+
   // Render client pages with the shared top Navbar
   return (
     <div
@@ -47,6 +52,7 @@ function MainContent() {
       <main className="flex-1">
         {currentRoute === '#/about' && <AboutPage />}
         {currentRoute === '#/projects' && <ProjectsPage />}
+        {isProjectDetail && <ProjectDetailPage projectNum={projectNum} />}
         {(currentRoute === '#/' || currentRoute === '') && (
           <>
             <HeroSection />

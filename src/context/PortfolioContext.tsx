@@ -42,6 +42,10 @@ export interface ProjectData {
   role: string
   tools: string[]
   liveUrl: string
+  challenge?: string
+  process?: string
+  solution?: string
+  extraImages?: string[]
 }
 
 export interface PortfolioData {
@@ -152,7 +156,11 @@ const defaultPortfolioData: PortfolioData = {
       description: 'Nextlevel Studio is a leading agency focused on immersive web experiences. We redesigned their digital footprint from scratch, combining interactive 3D elements with sleek performance optimization.',
       role: 'Lead 3D & Web Designer',
       tools: ['Spline', 'React', 'Framer Motion', 'Blender'],
-      liveUrl: 'https://nextlevel.studio'
+      liveUrl: 'https://nextlevel.studio',
+      challenge: 'The legacy Nextlevel platform suffered from sluggish load times and outdated visual guides. The brand needed an interface that felt interactive, modern, and aligned with premium 3D graphics standards.',
+      process: 'We mapped out structural page layouts, created high-fidelity glass-textured 3D models in Blender, exported them via Spline for real-time reactivity, and tied the interface together using custom React hooks.',
+      solution: 'A highly functional and responsive site offering seamless 60fps animations. Brand metrics showed an immediate 40% rise in session length and elevated client signups.',
+      extraImages: []
     },
     {
       num: '02',
@@ -167,7 +175,11 @@ const defaultPortfolioData: PortfolioData = {
       description: 'A modular, premium brand identity designed for a modern venture capital firm. Features custom typography, organic 3D glass objects, and cohesive print-digital brand guidelines.',
       role: 'Creative Director',
       tools: ['Figma', 'Cinema 4D', 'Photoshop', 'Illustrator'],
-      liveUrl: 'https://aura.brand'
+      liveUrl: '', // Hiding the button for demo purposes
+      challenge: 'Aura VC wanted to break away from sterile corporate imagery. They needed a visual style highlighting transparency, premium reliability, and future-focused asset growth.',
+      process: 'We developed an abstract typographic system and generated translucent 3D shapes representing fluid financial parameters. Mockups were built to test usability across digital collateral.',
+      solution: 'A cohesive brand playbook including logo variations, typography parameters, and a signature set of 3D renders that give Aura a unique aesthetic edge.',
+      extraImages: []
     },
     {
       num: '03',
@@ -182,7 +194,11 @@ const defaultPortfolioData: PortfolioData = {
       description: 'A high-fidelity landing page for a Web3 tech incubator. Built around an interactive planet orbit simulation, optimized for smooth 60fps renders on mobile devices.',
       role: 'Lead Developer',
       tools: ['Vite', 'Three.js', 'Tailwind CSS', 'Blender'],
-      liveUrl: 'https://solaris.digital'
+      liveUrl: 'https://solaris.digital',
+      challenge: 'Incubating startups struggle to communicate their technical architecture. Solaris needed a visual anchor explaining their ecosystem in a simple, interactive format.',
+      process: 'Tuned WebGL render passes within a custom Three.js scene. Set up responsive sizing layers to guarantee stability across low-tier mobile devices.',
+      solution: 'An engaging space-themed sandbox dashboard showing real-time venture paths. The product launch gained significant traction on digital lists.',
+      extraImages: []
     },
   ],
 }
@@ -209,6 +225,15 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
+        // Backwards compatibility for projects schema updates
+        const updatedProjects = (parsed.projects || []).map((p: any) => ({
+          challenge: '',
+          process: '',
+          solution: '',
+          extraImages: [],
+          ...p,
+        }))
+        
         return {
           ...defaultPortfolioData,
           ...parsed,
@@ -220,6 +245,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             ...defaultPortfolioData.about,
             ...parsed.about,
           },
+          projects: updatedProjects.length > 0 ? updatedProjects : defaultPortfolioData.projects,
         }
       } catch (e) {
         console.error('Error parsing portfolio_data from localStorage', e)

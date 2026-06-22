@@ -151,6 +151,10 @@ const AdminPanel: React.FC = () => {
     role: '',
     tools: [],
     liveUrl: '',
+    challenge: '',
+    process: '',
+    solution: '',
+    extraImages: [],
   })
 
   // New Timeline Item State
@@ -204,6 +208,10 @@ const AdminPanel: React.FC = () => {
       role: '',
       tools: [],
       liveUrl: '',
+      challenge: '',
+      process: '',
+      solution: '',
+      extraImages: [],
     })
   }
 
@@ -812,6 +820,40 @@ const AdminPanel: React.FC = () => {
                     />
                   </div>
 
+                  {/* Case Study Textareas */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Case Study: Challenge</label>
+                      <textarea
+                        value={proj.challenge || ''}
+                        onChange={(e) => updateProject(index, { challenge: e.target.value })}
+                        placeholder="Detail the challenges faced..."
+                        rows={3}
+                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans resize-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Case Study: Process</label>
+                      <textarea
+                        value={proj.process || ''}
+                        onChange={(e) => updateProject(index, { process: e.target.value })}
+                        placeholder="Detail the steps & process followed..."
+                        rows={3}
+                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans resize-none"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Case Study: Outcome/Solution</label>
+                      <textarea
+                        value={proj.solution || ''}
+                        onChange={(e) => updateProject(index, { solution: e.target.value })}
+                        placeholder="Detail the final solution, metrics..."
+                        rows={3}
+                        className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans resize-none"
+                      />
+                    </div>
+                  </div>
+
                   <div className="flex flex-col gap-1 mt-2">
                     <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Tools Used (Comma separated)</label>
                     <input
@@ -828,6 +870,51 @@ const AdminPanel: React.FC = () => {
                       placeholder="e.g. Figma, Blender, Cinema 4D"
                       className="bg-[#0C0C0C] border border-neutral-800 rounded-xl px-4 py-3 text-sm text-neutral-200 focus:outline-none focus:border-purple-500 font-sans"
                     />
+                  </div>
+
+                  {/* Extra Case Study Images */}
+                  <div className="flex flex-col gap-2 mt-2 p-4 bg-[#111] border border-neutral-800 rounded-2xl">
+                    <label className="text-xs font-bold uppercase tracking-widest text-neutral-400">Extra Case Study Gallery Images</label>
+                    <div className="flex flex-wrap gap-2">
+                      {(proj.extraImages || []).map((img, imgIdx) => (
+                        <div key={imgIdx} className="relative group w-20 h-20 rounded-lg overflow-hidden border border-neutral-800">
+                          <img src={img} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const list = [...(proj.extraImages || [])]
+                              list.splice(imgIdx, 1)
+                              updateProject(index, { extraImages: list })
+                            }}
+                            className="absolute inset-0 bg-red-600/80 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-xs font-bold"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                      <div className="w-20 h-20 rounded-lg border border-dashed border-neutral-700 hover:border-purple-500 transition-colors flex items-center justify-center relative cursor-pointer overflow-hidden">
+                        <label className="flex flex-col items-center justify-center w-full h-full text-[10px] text-neutral-500 hover:text-purple-400 cursor-pointer">
+                          <span>+ Upload</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (file) {
+                                const reader = new FileReader()
+                                reader.onloadend = () => {
+                                  updateProject(index, {
+                                    extraImages: [...(proj.extraImages || []), reader.result as string]
+                                  })
+                                }
+                                reader.readAsDataURL(file)
+                              }
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">

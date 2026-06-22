@@ -48,9 +48,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, totalCards, s
       >
         {/* Card Header */}
         <div className="flex items-center justify-between gap-4 flex-wrap border-b border-white/5 pb-4">
-          <div className="flex items-baseline gap-4 sm:gap-6">
+          <div 
+            className="flex items-baseline gap-4 sm:gap-6 cursor-pointer group"
+            onClick={() => { window.location.hash = `#/project/${project.num}` }}
+          >
             <span
-              className="hero-heading font-black leading-none"
+              className="hero-heading font-black leading-none group-hover:opacity-80 transition-opacity"
               style={{ fontSize: 'clamp(2.5rem, 8vw, 100px)' }}
             >
               {project.num}
@@ -60,7 +63,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, totalCards, s
                 {project.category}
               </span>
               <h2
-                className="text-white font-black uppercase tracking-tight"
+                className="text-white font-black uppercase tracking-tight group-hover:text-purple-400 transition-colors"
                 style={{ fontSize: 'clamp(1.2rem, 3vw, 2.4rem)' }}
               >
                 {project.name}
@@ -68,17 +71,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, index, totalCards, s
             </div>
           </div>
 
-          {project.liveUrl && (
-            <a
-              href={project.liveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#D7E2EA]/20 text-[#D7E2EA] font-medium uppercase tracking-widest text-xs hover:bg-[#D7E2EA]/10 hover:border-white transition-all cursor-pointer"
-            >
-              Live Project
-              <ExternalLink size={12} />
-            </a>
-          )}
+          <button
+            onClick={() => { window.location.hash = `#/project/${project.num}` }}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-[#D7E2EA]/20 text-[#D7E2EA] font-medium uppercase tracking-widest text-xs hover:bg-[#D7E2EA]/10 hover:border-white transition-all cursor-pointer bg-transparent"
+          >
+            View Case Study
+          </button>
         </div>
 
         {/* Card Main: Left Image Grid, Right Detailed metadata & Main Image */}
